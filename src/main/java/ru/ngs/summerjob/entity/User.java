@@ -4,14 +4,11 @@ import lombok.*;
 
 import java.util.List;
 
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@ToString
+@Data
 public class User {
     private long id;
     private String name;
-
     private List<Account> accounts;
+    private String login;
+    private String password;
 }
