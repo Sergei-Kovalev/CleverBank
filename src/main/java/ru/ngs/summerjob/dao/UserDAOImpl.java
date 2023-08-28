@@ -42,7 +42,6 @@ public class UserDAOImpl implements UserDAO {
         while (resultSet.next()) {
             user.setId(resultSet.getLong("id"));
             user.setName(resultSet.getString("name"));
-            user.setAccounts(null); //TODO добавить выборку аккаунтов
             user.setLogin(resultSet.getString("login"));
             user.setPassword(resultSet.getString("password"));
         }

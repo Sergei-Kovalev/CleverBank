@@ -2,6 +2,8 @@ package ru.ngs.summerjob;
 
 import ru.ngs.summerjob.dao.UserDAOImpl;
 import ru.ngs.summerjob.entity.User;
+import ru.ngs.summerjob.service.UserService;
+import ru.ngs.summerjob.service.UserServiceImpl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -9,9 +11,6 @@ import java.io.InputStreamReader;
 
 public class CleverBank {
     public static void main(String[] args) {
-
-        User userById = new UserDAOImpl().getUserById(1);
-        System.out.println(userById);
 
         System.out.println("Добро пожаловать в приложение Clever-Bank!");
         String login;
@@ -30,7 +29,8 @@ public class CleverBank {
             throw new RuntimeException(e);
         }
 
-        User user = new UserDAOImpl().getUserByLoginAndPassword(login, password);
+        UserService service = new UserServiceImpl();
+        User user = service.getUserByLoginAndPassword(login, password);
         while (user.getId() == 0) {
             System.out.println("""
                     Извините пользователя с таким именем/паролем не существует
