@@ -11,7 +11,9 @@ repositories {
 
 dependencies {
     compileOnly("org.projectlombok:lombok:1.18.28")
+    annotationProcessor("org.projectlombok:lombok:1.18.28")
     implementation("org.postgresql:postgresql:42.6.0")
+    implementation("org.yaml:snakeyaml:2.1")
     testImplementation(platform("org.junit:junit-bom:5.9.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 }
