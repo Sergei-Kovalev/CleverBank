@@ -2,8 +2,6 @@ package ru.ngs.summerjob.entity;
 
 import lombok.*;
 
-import java.util.List;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -12,7 +10,4 @@ import java.util.List;
 public class Bank {
     private long id;
     private String name;
-
-    //one to many
-    private List<Account> accounts;
 }

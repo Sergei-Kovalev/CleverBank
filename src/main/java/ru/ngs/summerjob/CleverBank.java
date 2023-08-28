@@ -1,51 +1,75 @@
 package ru.ngs.summerjob;
 
+import ru.ngs.summerjob.dao.UserDAOImpl;
 import ru.ngs.summerjob.entity.User;
+import ru.ngs.summerjob.service.UserService;
+import ru.ngs.summerjob.service.UserServiceImpl;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.sql.*;
 
 public class CleverBank {
     public static void main(String[] args) {
+
         System.out.println("Добро пожаловать в приложение Clever-Bank!");
         String login;
         String password;
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
-            System.out.println("Пожалуйста введите Ваш логин: ");
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Пожалуйста введите Ваш логин: ");
+        try {
             login = reader.readLine();
-            System.out.println("Пожалуйста введите Ваш пароль: ");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("Пожалуйста введите Ваш пароль: ");
+        try {
             password = reader.readLine();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        User user = new User();
-        user.setId(5);
 
-        try {
-            Class.forName("org.postgresql.Driver");
-            Connection connection = DriverManager.getConnection(
-                    "jdbc:postgresql://localhost:5432/clever_bank_db",
-                    "postgres",
-                    "193233"
+        UserService service = new UserServiceImpl();
+        User user = service.getUserByLoginAndPassword(login, password);
+        while (user.getId() == 0) {
+            System.out.println("""
+                    Извините пользователя с таким именем/паролем не существует
+                    Попробовать ввести снова?
+                    1. Да.
+                    2. Прекратить работу с программой.
+                    """);
+            String answer;
 
-            );
-            Statement statement = connection.createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM users");
-            while (resultSet.next()) {
-
-                long id = resultSet.getLong("id");
-                String name = resultSet.getString("name");
-
-                user.setId(id);
-                user.setName(name);
-
-                System.out.println(user);
+            System.out.println("Выберите вариант");
+            try {
+                answer = reader.readLine();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
 
-        } catch (ClassNotFoundException | SQLException e) {
-            throw new RuntimeException(e);
+            switch (answer) {
+                case ("1") -> {
+                    System.out.println("Пожалуйста введите Ваш логин: ");
+                    try {
+                        login = reader.readLine();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println("Пожалуйста введите Ваш пароль: ");
+                    try {
+                        password = reader.readLine();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    user = new UserDAOImpl().getUserByLoginAndPassword(login, password);
+                }
+                case ("2") -> {
+                    System.out.println("Спасибо за программы нашего банка. Всего доброго!");
+                    System.exit(0);
+                }
+                default -> System.out.println("Похоже Вы ввели некорректные данные. Попробуйте еще раз");
+            }
         }
+        System.out.println("Добро пожаловать " + user.getName() + "!");
     }
 }

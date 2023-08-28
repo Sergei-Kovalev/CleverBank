@@ -148,3 +148,10 @@ VALUES
     ('BRBA 2414 DORK 6678 EACH NAM3 4982', '2021-05-06', 386, 5, 5, 1),
     ('BRBA 2414 DORK 6678 EACH NAM3 1863', '1983-11-11', 1100, 11, 5, 1),
     ('BRBA 2414 DORK 6678 EACH NAM3 6832', '1993-06-28', 932, 15, 5, 1);
+
+INSERT INTO transactions(transaction_date, transaction_type_id, sender_account_id, recipient_account_id, amount)
+VALUES
+    ('2000-01-01 11:00:00', 3, null, 1, 10000),
+    ('2001-02-11 10:05:11', 1, 1, 2, 500),
+    ('2001-02-12 10:05:12', 1, 3, 1, 500),
+    ('2020-01-12 11:05:12', 1, 2, 3, 800);
