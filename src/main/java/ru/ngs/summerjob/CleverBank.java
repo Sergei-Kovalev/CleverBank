@@ -1,6 +1,7 @@
 package ru.ngs.summerjob;
 
 import ru.ngs.summerjob.controller.Controller;
+import ru.ngs.summerjob.entity.Account;
 import ru.ngs.summerjob.entity.TransactionType;
 import ru.ngs.summerjob.entity.User;
 
@@ -33,6 +34,23 @@ public class CleverBank {
                 %s
                 Выберите с каким счетом вы хотите произвести данную операцию.
                 """, transactionType.getName(), controller.createAccountsMenu(user.getId()));
-    }
+        Account userAccount = controller.selectionOfAccount(reader, user.getId());
+        System.out.println(userAccount);
+        System.out.println(userAccount.getBalance());
 
+        switch ((int) transactionType.getId()) {
+            case 3 -> {
+                System.out.println("Пожалуйста введите сумму для пополнения баланса (не может быть меньше 1 копейки):");
+                double amount = controller.readAmount(reader);
+                controller.replenishmentOfOwnAccount(userAccount, transactionType, amount);
+
+            }
+            case 2 -> {
+
+            }
+            case 1 -> {
+
+            }
+        }
+    }
 }

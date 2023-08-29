@@ -58,7 +58,7 @@ public class AccountDAOImpl implements AccountDAO {
         account.setId(resultSet.getLong("id"));
         account.setName(resultSet.getString("name"));
         account.setOpeningDate(resultSet.getTimestamp("opening_date").toLocalDateTime());
-        account.setBalance(resultSet.getLong("balance"));
+        account.setBalance(resultSet.getDouble("balance"));
         account.setUser(userDAO.getUserById(resultSet.getLong("user_id")));
         account.setBank(bankDAO.getBankById(resultSet.getLong("bank_id")));
         account.setCurrency(currencyDAO.getCurrencyById(resultSet.getLong("currency_id")));

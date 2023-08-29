@@ -26,14 +26,14 @@ public class TransactionDAOImpl implements TransactionDAO {
             PreparedStatement statement = connection.prepareStatement(FIND_BY_ID);
             statement.setLong(1, id);
             ResultSet resultSet = statement.executeQuery();
-            fillTransaction(resultSet, transaction);
+            while (resultSet.next()) {
+                fillTransaction(resultSet, transaction);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return transaction;
     }
-
-    //TODO проверить работоспособность
     @Override
     public List<Transaction> getTransactionsByUserId(long id) {
         List<Transaction> transactions = new ArrayList<>();
@@ -42,41 +42,27 @@ public class TransactionDAOImpl implements TransactionDAO {
             statement.setLong(1, id);
             statement.setLong(2, id);
             ResultSet resultSet = statement.executeQuery();
-            fillAllTransactions(resultSet, transactions);
+            while (resultSet.next()) {
+                Transaction transaction = new Transaction();
+                fillTransaction(resultSet, transaction);
+                transactions.add(transaction);
+            }
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
         return transactions;
     }
 
-    private void fillAllTransactions(ResultSet resultSet, List<Transaction> transactions) throws SQLException {
-        while (resultSet.next()) {
-            Transaction transaction = new Transaction();
-            transaction.setId(resultSet.getLong("id"));
-            transaction.setDate(resultSet.getTimestamp("transaction_date").toLocalDateTime());
-            transaction.setType(transactionTypeDAO.getTransactionTypeById(
-                    resultSet.getLong("transaction_type_id")));
-            transaction.setAccountSender(accountDAO.getAccountById(
-                    resultSet.getLong("sender_account_id")));
-            transaction.setAccountRecipient(accountDAO.getAccountById(
-                    resultSet.getLong("recipient_account_id")));
-            transaction.setAmount(resultSet.getLong("amount"));
-            transactions.add(transaction);
-        }
-    }
-
     private void fillTransaction(ResultSet resultSet, Transaction transaction) throws SQLException {
-        while (resultSet.next()) {
-            transaction.setId(resultSet.getLong("id"));
-            transaction.setDate(resultSet.getTimestamp("transaction_date").toLocalDateTime());
-            transaction.setType(transactionTypeDAO.getTransactionTypeById(
-                    resultSet.getLong("transaction_type_id")));
-            transaction.setAccountSender(accountDAO.getAccountById(
-                    resultSet.getLong("sender_account_id")));
-            transaction.setAccountRecipient(accountDAO.getAccountById(
-                    resultSet.getLong("recipient_account_id")));
-            transaction.setAmount(resultSet.getLong("amount"));
-        }
+        transaction.setId(resultSet.getLong("id"));
+        transaction.setDate(resultSet.getTimestamp("transaction_date").toLocalDateTime());
+        transaction.setType(transactionTypeDAO.getTransactionTypeById(
+                resultSet.getLong("transaction_type_id")));
+        transaction.setAccountSender(accountDAO.getAccountById(
+                resultSet.getLong("sender_account_id")));
+        transaction.setAccountRecipient(accountDAO.getAccountById(
+                resultSet.getLong("recipient_account_id")));
+        transaction.setAmount(resultSet.getDouble("amount"));
     }
 
     private Connection getConnection() throws SQLException {

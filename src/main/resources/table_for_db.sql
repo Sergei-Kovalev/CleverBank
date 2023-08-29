@@ -5,8 +5,6 @@ DROP TABLE IF EXISTS banks;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS currencies;
 
-
-
 CREATE TABLE banks (
     id SERIAL NOT NULL,
     name VARCHAR(50) NOT NULL,
@@ -37,7 +35,7 @@ CREATE TABLE accounts (
     id SERIAL NOT NULL,
     name VARCHAR(34) NOT NULL,
     opening_date TIMESTAMP without TIME ZONE,
-    balance INTEGER NOT NULL,
+    balance NUMERIC(10, 2) NOT NULL,
     user_id INTEGER NOT NULL,
     bank_id INTEGER NOT NULL,
     currency_id INTEGER NOT NULL,
@@ -50,7 +48,7 @@ CREATE TABLE accounts (
 CREATE TABLE transactions (
     id SERIAL NOT NULL,
     transaction_date TIMESTAMP without TIME ZONE,
-    transaction_type_id INTEGER NOT NULL,
+    transaction_type_id NUMERIC(10, 2) NOT NULL,
     sender_account_id INTEGER,
     recipient_account_id INTEGER NOT NULL,
     amount INTEGER NOT NULL,
@@ -129,7 +127,7 @@ VALUES
     ('AS12 4306 1200 2132 DGSS 56SD 4455', '2016-07-06', 356, 19, 1, 1),
     ('AS12 4306 1200 2132 DGSS 56SD 4566', '2017-06-05', 998, 20, 1, 1),
     ('ALFA 6654 AGRR 5566 OOPS AHHA 0001', '1999-10-25', 8008, 1, 2, 1),
-    ('ALFA 6654 AGRR 5566 OOPS AHHA 0010', '2000-09-26', 7007, 7, 2, 1),
+    ('ALFA 6654 AGRR 5566 OOPS AHHA 0010', '2000-09-26', 7007.22, 7, 2, 1),
     ('ALFA 6654 AGRR 5566 OOPS AHHA 0011', '2001-08-27', 5005, 10, 2, 1),
     ('ALFA 6654 AGRR 5566 OOPS AHHA 0100', '2002-07-28', 3003, 11, 2, 1),
     ('ALFA 6654 AGRR 5566 OOPS AHHA 0101', '2003-06-29', 1001, 19, 2, 1),
