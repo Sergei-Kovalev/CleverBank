@@ -15,5 +15,5 @@ public class Transaction {
     private TransactionType type;
     private Account accountSender;
     private Account accountRecipient;
-    private long amount;
+    private double amount;
 }

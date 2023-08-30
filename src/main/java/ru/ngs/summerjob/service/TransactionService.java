@@ -8,4 +8,5 @@ public interface TransactionService {
     Transaction getTransactionById(long id);
     List<Transaction> getTransactionsByUserId(long id);
 
+    boolean saveTransaction(Transaction transaction);
 }

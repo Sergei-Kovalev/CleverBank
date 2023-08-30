@@ -9,6 +9,7 @@ import java.util.List;
 
 public class AccountDAOImpl implements AccountDAO {
     private final static String FIND_BY_ID = "SELECT * FROM accounts WHERE id = ?";
+    private final static String FIND_BY_NAME = "SELECT * FROM accounts WHERE name = ?";
     private final static String FIND_ALL_BY_USER_ID = "SELECT * FROM accounts WHERE user_id = ?";
     UserDAO userDAO;
     BankDAO bankDAO;
@@ -54,11 +55,27 @@ public class AccountDAOImpl implements AccountDAO {
         return accounts;
     }
 
+    @Override
+    public Account getAccountByName(String accountName) {
+        Account account = new Account();
+        try(Connection connection = getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(FIND_BY_NAME);
+            statement.setString(1, accountName);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                fillAccountData(resultSet, account);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return account;
+    }
+
     private void fillAccountData(ResultSet resultSet, Account account) throws SQLException {
         account.setId(resultSet.getLong("id"));
         account.setName(resultSet.getString("name"));
         account.setOpeningDate(resultSet.getTimestamp("opening_date").toLocalDateTime());
-        account.setBalance(resultSet.getLong("balance"));
+        account.setBalance(resultSet.getDouble("balance"));
         account.setUser(userDAO.getUserById(resultSet.getLong("user_id")));
         account.setBank(bankDAO.getBankById(resultSet.getLong("bank_id")));
         account.setCurrency(currencyDAO.getCurrencyById(resultSet.getLong("currency_id")));

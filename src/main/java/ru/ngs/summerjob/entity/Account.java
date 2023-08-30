@@ -13,7 +13,7 @@ public class Account {
     private long id;
     private String name;
     private LocalDateTime openingDate;
-    private long balance;
+    private double balance;
 
     private User user;
 
