@@ -1,75 +1,76 @@
 package ru.ngs.summerjob;
 
-import ru.ngs.summerjob.dao.UserDAOImpl;
+import ru.ngs.summerjob.controller.Controller;
+import ru.ngs.summerjob.entity.Account;
+import ru.ngs.summerjob.entity.TransactionType;
 import ru.ngs.summerjob.entity.User;
-import ru.ngs.summerjob.service.UserService;
-import ru.ngs.summerjob.service.UserServiceImpl;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 
 public class CleverBank {
+    private final static String ACCEPTED = "Транзакция прошла успешно";
     public static void main(String[] args) {
 
+        Controller controller = new Controller();
+
         System.out.println("Добро пожаловать в приложение Clever-Bank!");
-        String login;
-        String password;
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        System.out.println("Пожалуйста введите Ваш логин: ");
-        try {
-            login = reader.readLine();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("Пожалуйста введите Ваш пароль: ");
-        try {
-            password = reader.readLine();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        User user = controller.userAuthorizationMethod(reader);
+        System.out.printf("Добро пожаловать %s!" + System.lineSeparator(), user.getName());
 
-        UserService service = new UserServiceImpl();
-        User user = service.getUserByLoginAndPassword(login, password);
-        while (user.getId() == 0) {
-            System.out.println("""
-                    Извините пользователя с таким именем/паролем не существует
-                    Попробовать ввести снова?
-                    1. Да.
-                    2. Прекратить работу с программой.
+        do {
+            System.out.print("""                
+                    Выберите операцию, которая Вас интересует:
+                    1. Пополнение счета.
+                    2. Снятие средств.
+                    3. Перевод на счет другого лица.
+                    4. Выход из приложения.
                     """);
-            String answer;
+            TransactionType transactionType = controller.selectionOfTransactionType(reader);
 
-            System.out.println("Выберите вариант");
-            try {
-                answer = reader.readLine();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+            System.out.printf("""
+                    Вы выбрали "%s"
+                                    
+                    В настоящее время у Вас открыты следующие счета:
+                    %s
+                    Выберите с каким счетом вы хотите произвести данную операцию.
+                    """, transactionType.getName(), controller.createAccountsMenu(user.getId()));
+            Account userAccount = controller.selectionOfAccount(reader, user.getId());
 
-            switch (answer) {
-                case ("1") -> {
-                    System.out.println("Пожалуйста введите Ваш логин: ");
-                    try {
-                        login = reader.readLine();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+            switch ((int) transactionType.getId()) {
+                case 3 -> {
+                    System.out.println("Пожалуйста введите сумму для пополнения баланса (не может быть меньше 1 копейки):");
+                    double amount = controller.readAmount(reader);
+                    if (controller.replenishmentOfOwnAccount(userAccount, transactionType, amount)) {
+                        System.out.println(ACCEPTED);
                     }
-                    System.out.println("Пожалуйста введите Ваш пароль: ");
-                    try {
-                        password = reader.readLine();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
+                }
+                case 2 -> {
+                    System.out.println("Пожалуйста введите сумму для снятия со счета (не может быть меньше 1 копейки):");
+                    double amount = controller.readAmount(reader);
+                    if (controller.withdrawFromOwnAccount(userAccount, transactionType, amount)) {
+                        System.out.println(ACCEPTED);
                     }
-                    user = new UserDAOImpl().getUserByLoginAndPassword(login, password);
                 }
-                case ("2") -> {
-                    System.out.println("Спасибо за программы нашего банка. Всего доброго!");
-                    System.exit(0);
+                case 1 -> {
+                    System.out.print("""
+                            Пожалуйста введите номер счета получателя.
+                            Формат: XXXX XXXX XXXX XXXX XXXX XXXX XXXX
+                            """);
+                    Account recepientAccount = controller.readAccountByName(reader, userAccount);
+
+                    System.out.println("Пожалуйста введите сумму для перевода (не может быть меньше 1 копейки):");
+                    double amount = controller.readAmount(reader);
+                    if (controller.remittance(userAccount, recepientAccount, transactionType, amount)) {
+                        System.out.println(ACCEPTED);
+                    }
                 }
-                default -> System.out.println("Похоже Вы ввели некорректные данные. Попробуйте еще раз");
             }
-        }
-        System.out.println("Добро пожаловать " + user.getName() + "!");
+            System.out.print("""
+                    Желаете совершить еще операции по счетам?
+                    Введите ДА или YES для продолжения работы либо любой другой текст для выхода из приложения.
+                    """);
+        } while (controller.isContinue(reader));
     }
 }
