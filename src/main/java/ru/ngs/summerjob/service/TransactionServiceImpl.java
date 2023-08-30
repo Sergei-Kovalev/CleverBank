@@ -22,4 +22,9 @@ public class TransactionServiceImpl implements TransactionService {
     public List<Transaction> getTransactionsByUserId(long id) {
         return transactionDAO.getTransactionsByUserId(id);
     }
+
+    @Override
+    public boolean saveTransaction(Transaction transaction) {
+        return transactionDAO.saveTransaction(transaction);
+    }
 }

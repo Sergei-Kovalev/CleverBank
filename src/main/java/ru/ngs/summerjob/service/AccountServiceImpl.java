@@ -22,4 +22,9 @@ public class AccountServiceImpl implements AccountService {
     public List<Account> getAccountsByUserId(long userId) {
         return accountDAO.getAccountsByUserId(userId);
     }
+
+    @Override
+    public Account getAccountByName(String accountName) {
+        return accountDAO.getAccountByName(accountName);
+    }
 }

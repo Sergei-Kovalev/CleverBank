@@ -7,10 +7,23 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.sql.Types.NULL;
+
 public class TransactionDAOImpl implements TransactionDAO {
     private final static String FIND_BY_ID = "SELECT * FROM transactions WHERE id = ?";
     private final static String FIND_BY_USER_ID =
             "SELECT * FROM transactions WHERE sender_account_id = ? OR recipient_account_id = ?";
+    private final static String SAVE_TRANSACTION = """
+            INSERT INTO transactions(transaction_date, transaction_type_id, sender_account_id, recipient_account_id, amount)
+            VALUES
+                (?, ?, ?, ?, ?);""";
+
+    private final static String APPEND_FOR_REPLENISHMENT_AND_WITHDRAW = """
+            UPDATE accounts
+            SET balance = ?
+            WHERE id = ?;
+            """;
+
     TransactionTypeDAO transactionTypeDAO;
     AccountDAO accountDAO;
 
@@ -51,6 +64,58 @@ public class TransactionDAOImpl implements TransactionDAO {
             throw new RuntimeException(e);
         }
         return transactions;
+    }
+
+    @Override
+    public boolean saveTransaction(Transaction transaction) {
+        try(Connection connection = getConnection()) {
+            if (transaction.getType().getId() == 3) {
+                PreparedStatement statement = connection.prepareStatement(
+                        SAVE_TRANSACTION + APPEND_FOR_REPLENISHMENT_AND_WITHDRAW);
+                fillConstantFieldsForSavingTransaction(transaction, statement);
+
+                statement.setNull(3, NULL);
+
+                statement.setDouble(6, transaction.getAccountRecipient().getBalance() + transaction.getAmount());
+                statement.setLong(7, transaction.getAccountRecipient().getId());
+
+                statement.executeUpdate();
+            } else if (transaction.getType().getId() == 2) {
+                PreparedStatement statement = connection.prepareStatement(
+                        SAVE_TRANSACTION + APPEND_FOR_REPLENISHMENT_AND_WITHDRAW);
+                fillConstantFieldsForSavingTransaction(transaction, statement);
+
+                statement.setNull(3, NULL);
+
+                statement.setDouble(6, transaction.getAccountRecipient().getBalance() - transaction.getAmount());
+                statement.setLong(7, transaction.getAccountRecipient().getId());
+
+                statement.executeUpdate();
+            } else if (transaction.getType().getId() == 1) {
+                PreparedStatement statement = connection.prepareStatement(
+                        SAVE_TRANSACTION + APPEND_FOR_REPLENISHMENT_AND_WITHDRAW + APPEND_FOR_REPLENISHMENT_AND_WITHDRAW
+                );
+                fillConstantFieldsForSavingTransaction(transaction, statement);
+
+                statement.setLong(3, transaction.getAccountSender().getId());
+
+                statement.setDouble(6, transaction.getAccountSender().getBalance() - transaction.getAmount());
+                statement.setLong(7, transaction.getAccountSender().getId());
+                statement.setDouble(8, transaction.getAccountRecipient().getBalance() + transaction.getAmount());
+                statement.setLong(9, transaction.getAccountRecipient().getId());
+                statement.executeUpdate();
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return true;
+    }
+
+    private static void fillConstantFieldsForSavingTransaction(Transaction transaction, PreparedStatement statement) throws SQLException {
+        statement.setTimestamp(1, Timestamp.valueOf(transaction.getDate()));
+        statement.setLong(2, transaction.getType().getId());
+        statement.setLong(4, transaction.getAccountRecipient().getId());
+        statement.setDouble(5, transaction.getAmount());
     }
 
     private void fillTransaction(ResultSet resultSet, Transaction transaction) throws SQLException {

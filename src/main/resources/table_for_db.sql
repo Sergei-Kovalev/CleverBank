@@ -51,10 +51,10 @@ CREATE TABLE transactions (
     transaction_type_id NUMERIC(10, 2) NOT NULL,
     sender_account_id INTEGER,
     recipient_account_id INTEGER NOT NULL,
-    amount INTEGER NOT NULL,
+    amount NUMERIC(10, 2) NOT NULL,
     PRIMARY KEY (id),
-    FOREIGN KEY (sender_account_id) REFERENCES users(id) ON DELETE RESTRICT,
-    FOREIGN KEY (recipient_account_id) REFERENCES users(id) ON DELETE RESTRICT
+    FOREIGN KEY (sender_account_id) REFERENCES accounts(id) ON DELETE RESTRICT,
+    FOREIGN KEY (recipient_account_id) REFERENCES accounts(id) ON DELETE RESTRICT
 );
 
 INSERT INTO banks(name)
