@@ -15,4 +15,9 @@ public class BankServiceImpl implements BankService {
     public Bank getBankById(long id) {
         return bankDAO.getBankById(id);
     }
+
+    @Override
+    public Bank getBankByName(String name) {
+        return bankDAO.getBankByName(name);
+    }
 }

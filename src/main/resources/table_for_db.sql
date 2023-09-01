@@ -59,7 +59,7 @@ CREATE TABLE transactions (
 
 INSERT INTO banks(name)
 VALUES
-    ('BelAgroPromBank'),
+    ('Clever-Bank'),
     ('Alfa Bank'),
     ('MTBank'),
     ('BelInvestBank'),

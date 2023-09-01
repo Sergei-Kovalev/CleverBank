@@ -69,7 +69,7 @@ public class TransactionDAOImpl implements TransactionDAO {
     @Override
     public boolean saveTransaction(Transaction transaction) {
         try(Connection connection = getConnection()) {
-            if (transaction.getType().getId() == 3) {
+            if (transaction.getType().getId() == 3 || transaction.getType().getId() == 4) {
                 PreparedStatement statement = connection.prepareStatement(
                         SAVE_TRANSACTION + APPEND_FOR_REPLENISHMENT_AND_WITHDRAW);
                 fillConstantFieldsForSavingTransaction(transaction, statement);
