@@ -10,6 +10,7 @@ import java.util.List;
 public class AccountDAOImpl implements AccountDAO {
     private final static String FIND_BY_ID = "SELECT * FROM accounts WHERE id = ?";
     private final static String FIND_BY_NAME = "SELECT * FROM accounts WHERE name = ?";
+    private final static String FIND_BY_BANK_ID = "SELECT * FROM accounts WHERE bank_id = ?";
     private final static String FIND_ALL_BY_USER_ID = "SELECT * FROM accounts WHERE user_id = ?";
     UserDAO userDAO;
     BankDAO bankDAO;
@@ -69,6 +70,24 @@ public class AccountDAOImpl implements AccountDAO {
             throw new RuntimeException(e);
         }
         return account;
+    }
+
+    @Override
+    public List<Account> getAccountByBankId(long bankId) {
+        List<Account> accounts = new ArrayList<>();
+        try(Connection connection = getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(FIND_BY_BANK_ID);
+            statement.setLong(1, bankId);
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                Account account = new Account();
+                fillAccountData(resultSet, account);
+                accounts.add(account);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return accounts;
     }
 
     private void fillAccountData(ResultSet resultSet, Account account) throws SQLException {

@@ -27,4 +27,9 @@ public class AccountServiceImpl implements AccountService {
     public Account getAccountByName(String accountName) {
         return accountDAO.getAccountByName(accountName);
     }
+
+    @Override
+    public List<Account> getAccountsByBankId(long bankId) {
+        return accountDAO.getAccountByBankId(bankId);
+    }
 }

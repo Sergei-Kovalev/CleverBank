@@ -2,6 +2,7 @@ package ru.ngs.summerjob.dao;
 
 import ru.ngs.summerjob.config.Config;
 import ru.ngs.summerjob.entity.Transaction;
+import ru.ngs.summerjob.utils.CheckGenerator;
 
 import java.sql.*;
 import java.util.ArrayList;
@@ -24,12 +25,15 @@ public class TransactionDAOImpl implements TransactionDAO {
             WHERE id = ?;
             """;
 
+
     TransactionTypeDAO transactionTypeDAO;
     AccountDAO accountDAO;
+    CheckGenerator checkGenerator;
 
     public TransactionDAOImpl() {
         this.transactionTypeDAO = new TransactionTypeDAOImpl();
         this.accountDAO = new AccountDAOImpl();
+        this.checkGenerator = new CheckGenerator();
     }
 
     @Override
@@ -69,7 +73,7 @@ public class TransactionDAOImpl implements TransactionDAO {
     @Override
     public boolean saveTransaction(Transaction transaction) {
         try(Connection connection = getConnection()) {
-            if (transaction.getType().getId() == 3) {
+            if (transaction.getType().getId() == 3 || transaction.getType().getId() == 4) {
                 PreparedStatement statement = connection.prepareStatement(
                         SAVE_TRANSACTION + APPEND_FOR_REPLENISHMENT_AND_WITHDRAW);
                 fillConstantFieldsForSavingTransaction(transaction, statement);
@@ -80,6 +84,8 @@ public class TransactionDAOImpl implements TransactionDAO {
                 statement.setLong(7, transaction.getAccountRecipient().getId());
 
                 statement.executeUpdate();
+                checkGenerator.saveCheckInFile(transaction);
+
             } else if (transaction.getType().getId() == 2) {
                 PreparedStatement statement = connection.prepareStatement(
                         SAVE_TRANSACTION + APPEND_FOR_REPLENISHMENT_AND_WITHDRAW);
@@ -91,6 +97,8 @@ public class TransactionDAOImpl implements TransactionDAO {
                 statement.setLong(7, transaction.getAccountRecipient().getId());
 
                 statement.executeUpdate();
+                checkGenerator.saveCheckInFile(transaction);
+
             } else if (transaction.getType().getId() == 1) {
                 PreparedStatement statement = connection.prepareStatement(
                         SAVE_TRANSACTION + APPEND_FOR_REPLENISHMENT_AND_WITHDRAW + APPEND_FOR_REPLENISHMENT_AND_WITHDRAW
@@ -104,6 +112,7 @@ public class TransactionDAOImpl implements TransactionDAO {
                 statement.setDouble(8, transaction.getAccountRecipient().getBalance() + transaction.getAmount());
                 statement.setLong(9, transaction.getAccountRecipient().getId());
                 statement.executeUpdate();
+                checkGenerator.saveCheckInFile(transaction);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);

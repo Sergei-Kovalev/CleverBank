@@ -8,4 +8,6 @@ public interface AccountService {
     Account getAccountById(long id);
     List<Account> getAccountsByUserId(long userId);
     Account getAccountByName(String accountName);
+
+    List<Account> getAccountsByBankId(long bankId);
 }

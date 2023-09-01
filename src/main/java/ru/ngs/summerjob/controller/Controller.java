@@ -1,6 +1,5 @@
 package ru.ngs.summerjob.controller;
 
-import ru.ngs.summerjob.dao.UserDAOImpl;
 import ru.ngs.summerjob.entity.Account;
 import ru.ngs.summerjob.entity.Transaction;
 import ru.ngs.summerjob.entity.TransactionType;
@@ -26,7 +25,11 @@ public class Controller {
     private final static String INCORRECT_ACCOUNT_YOURSELF =
             "Извините, Вы ввели счет получатель тот же что и отправитель - это не имеет смысла :). Попробуйте еще раз.";
     private final static String CLOSE_APP_CHOICE =
-            "Спасибо за программы нашего банка. Всего доброго!";
+            """
+                    Спасибо за программы нашего банка. Всего доброго!
+                    __________________________________________________________________________________________
+                    
+                    """;
     UserService userService;
     TransactionTypeService transactionTypeService;
     AccountService accountService;
@@ -49,61 +52,37 @@ public class Controller {
     }
 
     public User userAuthorizationMethod(BufferedReader reader) {
-        String login;
-        String password;
-        System.out.println("Пожалуйста введите Ваш логин: ");
-        try {
-            login = reader.readLine();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println("Пожалуйста введите Ваш пароль: ");
-        try {
-            password = reader.readLine();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        User user = new User();
+        user.setId(0);
 
-        User user = getUserByLoginAndPassword(login, password);
-        while (user.getId() == 0) {
-            System.out.println("""
-                    Извините пользователя с таким именем/паролем не существует
-                    Попробовать ввести снова?
-                    1. Да.
-                    2. Выход из приложения.
-                    """);
-            String answer;
-
-            System.out.println("Выберите вариант");
+        boolean tryAgain;
+        do {
+            String login;
+            String password;
+            System.out.println("Пожалуйста введите Ваш логин: ");
             try {
-                answer = reader.readLine();
+                login = reader.readLine();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("Пожалуйста введите Ваш пароль: ");
+            try {
+                password = reader.readLine();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
 
-            switch (answer) {
-                case ("1") -> {
-                    System.out.println("Пожалуйста введите Ваш логин: ");
-                    try {
-                        login = reader.readLine();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    System.out.println("Пожалуйста введите Ваш пароль: ");
-                    try {
-                        password = reader.readLine();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    user = new UserDAOImpl().getUserByLoginAndPassword(login, password);
-                }
-                case ("2") -> {
-                    System.out.println(CLOSE_APP_CHOICE);
-                    System.exit(0);
-                }
-                default -> System.out.println(INCORRECT_CHOICE_FROM_MENU);
-            }
-        }
+            user = getUserByLoginAndPassword(login, password);
+
+            if (user.getId() == 0) {
+                System.out.println("Извините пользователя с таким именем/паролем не существует");
+                System.out.print("""
+                        Желаете попробовать снова?
+                        Введите ДА или YES для продолжения работы либо любой другой текст для выхода из приложения.
+                        """);
+            } else break;
+            tryAgain = isContinue(reader);
+        } while (tryAgain);
         return user;
     }
 
@@ -122,7 +101,8 @@ public class Controller {
                 case ("3") -> transactionType = getTransactionTypeById(1);
                 case ("4") -> {
                     System.out.println(CLOSE_APP_CHOICE);
-                    System.exit(0);
+                    transactionType = new TransactionType();
+                    transactionType.setId(0);
                 }
                 default -> System.out.println(INCORRECT_CHOICE_FROM_MENU);
             }
