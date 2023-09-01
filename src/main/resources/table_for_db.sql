@@ -4,6 +4,12 @@ DROP TABLE IF EXISTS accounts;
 DROP TABLE IF EXISTS banks;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS currencies;
+DROP TABLE IF EXISTS checks;
+
+CREATE TABLE checks (
+    id SERIAL NOT NULL,
+    PRIMARY KEY (id)
+);
 
 CREATE TABLE banks (
     id SERIAL NOT NULL,
@@ -48,7 +54,7 @@ CREATE TABLE accounts (
 CREATE TABLE transactions (
     id SERIAL NOT NULL,
     transaction_date TIMESTAMP without TIME ZONE,
-    transaction_type_id NUMERIC(10, 2) NOT NULL,
+    transaction_type_id INTEGER NOT NULL,
     sender_account_id INTEGER,
     recipient_account_id INTEGER NOT NULL,
     amount NUMERIC(10, 2) NOT NULL,

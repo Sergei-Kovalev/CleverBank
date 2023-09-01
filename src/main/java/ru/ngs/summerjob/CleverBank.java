@@ -1,19 +1,13 @@
 package ru.ngs.summerjob;
 
-import ru.ngs.summerjob.config.Config;
 import ru.ngs.summerjob.controller.Controller;
 import ru.ngs.summerjob.entity.Account;
-import ru.ngs.summerjob.entity.Bank;
 import ru.ngs.summerjob.entity.TransactionType;
 import ru.ngs.summerjob.entity.User;
-import ru.ngs.summerjob.service.AccountService;
-import ru.ngs.summerjob.service.AccountServiceImpl;
-import ru.ngs.summerjob.service.BankServiceImpl;
 import ru.ngs.summerjob.utils.InterestTimer;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -23,17 +17,6 @@ public class CleverBank {
     public static void main(String[] args) {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(new InterestTimer(), 0, 30, TimeUnit.SECONDS);
-
-        BankServiceImpl bankService = new BankServiceImpl();
-        String s = Config.getConfig().get("bank").get("name");
-        System.out.println(s);
-        Bank bank = bankService.getBankByName(s);
-        System.out.println(bank);
-
-        AccountService accountService = new AccountServiceImpl();
-        List<Account> accounts = accountService.getAccountsByBankId(bank.getId());
-
-        accounts.forEach(System.out::println);
 
 
         while (true) {
