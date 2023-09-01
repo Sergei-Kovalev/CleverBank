@@ -2,9 +2,9 @@ package ru.ngs.summerjob.dao;
 
 import ru.ngs.summerjob.config.Config;
 import ru.ngs.summerjob.entity.Transaction;
-import ru.ngs.summerjob.utils.CheckGenerator;
 
 import java.sql.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,8 +12,12 @@ import static java.sql.Types.NULL;
 
 public class TransactionDAOImpl implements TransactionDAO {
     private final static String FIND_BY_ID = "SELECT * FROM transactions WHERE id = ?";
-    private final static String FIND_BY_USER_ID =
-            "SELECT * FROM transactions WHERE sender_account_id = ? OR recipient_account_id = ?";
+
+    private final static String FIND_BY_USER_ID_AND_PERIOD = """
+            SELECT * FROM transactions
+            WHERE (transaction_date BETWEEN ? AND ?)
+            AND (sender_account_id = ? OR recipient_account_id = ?);
+            """;
     private final static String SAVE_TRANSACTION = """
             INSERT INTO transactions(transaction_date, transaction_type_id, sender_account_id, recipient_account_id, amount)
             VALUES
@@ -28,12 +32,11 @@ public class TransactionDAOImpl implements TransactionDAO {
 
     TransactionTypeDAO transactionTypeDAO;
     AccountDAO accountDAO;
-    CheckGenerator checkGenerator;
+
 
     public TransactionDAOImpl() {
         this.transactionTypeDAO = new TransactionTypeDAOImpl();
         this.accountDAO = new AccountDAOImpl();
-        this.checkGenerator = new CheckGenerator();
     }
 
     @Override
@@ -52,12 +55,14 @@ public class TransactionDAOImpl implements TransactionDAO {
         return transaction;
     }
     @Override
-    public List<Transaction> getTransactionsByUserId(long id) {
+    public List<Transaction> getTransactionsByUserIdAndPeriod(long userId, LocalDateTime fromDate, LocalDateTime toDate) {
         List<Transaction> transactions = new ArrayList<>();
         try(Connection connection = getConnection()) {
-            PreparedStatement statement = connection.prepareStatement(FIND_BY_USER_ID);
-            statement.setLong(1, id);
-            statement.setLong(2, id);
+            PreparedStatement statement = connection.prepareStatement(FIND_BY_USER_ID_AND_PERIOD);
+            statement.setTimestamp(1, Timestamp.valueOf(fromDate));
+            statement.setTimestamp(2, Timestamp.valueOf(toDate));
+            statement.setLong(3, userId);
+            statement.setLong(4, userId);
             ResultSet resultSet = statement.executeQuery();
             while (resultSet.next()) {
                 Transaction transaction = new Transaction();
@@ -84,7 +89,6 @@ public class TransactionDAOImpl implements TransactionDAO {
                 statement.setLong(7, transaction.getAccountRecipient().getId());
 
                 statement.executeUpdate();
-                checkGenerator.saveCheckInFile(transaction);
 
             } else if (transaction.getType().getId() == 2) {
                 PreparedStatement statement = connection.prepareStatement(
@@ -97,7 +101,6 @@ public class TransactionDAOImpl implements TransactionDAO {
                 statement.setLong(7, transaction.getAccountRecipient().getId());
 
                 statement.executeUpdate();
-                checkGenerator.saveCheckInFile(transaction);
 
             } else if (transaction.getType().getId() == 1) {
                 PreparedStatement statement = connection.prepareStatement(
@@ -112,7 +115,6 @@ public class TransactionDAOImpl implements TransactionDAO {
                 statement.setDouble(8, transaction.getAccountRecipient().getBalance() + transaction.getAmount());
                 statement.setLong(9, transaction.getAccountRecipient().getId());
                 statement.executeUpdate();
-                checkGenerator.saveCheckInFile(transaction);
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);

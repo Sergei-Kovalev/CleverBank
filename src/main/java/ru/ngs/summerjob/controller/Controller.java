@@ -5,6 +5,8 @@ import ru.ngs.summerjob.entity.Transaction;
 import ru.ngs.summerjob.entity.TransactionType;
 import ru.ngs.summerjob.entity.User;
 import ru.ngs.summerjob.service.*;
+import ru.ngs.summerjob.utils.AccountStatementGenerator;
+import ru.ngs.summerjob.utils.CheckGenerator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -30,17 +32,38 @@ public class Controller {
                     __________________________________________________________________________________________
                     
                     """;
+    private final static String CHOOSE_PERIOD = """
+            Пожалуйста выберите какой формат выписки Вас интересует:
+            1. За месяц.
+            2. За год.
+            3. За весь период.
+            """;
+    private final static String CHOOSE_YEAR = """
+            Пожалуйста введите год (должен быть между 1970 и %s):
+            """;
+    private final static String CHOOSE_MONTH = """
+            Пожалуйста, выберите месяц (по номеру):
+            1. Январь           7. Июль
+            2. Февраль          8. Август
+            3. Март             9. Сентябрь
+            4. Апрель          10. Октябрь
+            5. Май             11. Ноябрь
+            6. Июнь            12. Декабрь
+            """;
     UserService userService;
     TransactionTypeService transactionTypeService;
     AccountService accountService;
-
     TransactionService transactionService;
+    CheckGenerator checkGenerator;
+    AccountStatementGenerator accountStatementGenerator;
 
     public Controller() {
         this.userService = new UserServiceImpl();
         this.transactionTypeService = new TransactionTypeServiceImpl();
         this.accountService = new AccountServiceImpl();
         this.transactionService = new TransactionServiceImpl();
+        this.checkGenerator = new CheckGenerator();
+        this.accountStatementGenerator = new AccountStatementGenerator();
     }
 
     private User getUserByLoginAndPassword(String login, String password) {
@@ -158,7 +181,7 @@ public class Controller {
 
         transaction.setAccountSender(null);
         transaction.setAccountRecipient(userAccount);
-
+        checkGenerator.saveCheckInFile(transaction);
         return transactionService.saveTransaction(transaction);
     }
 
@@ -168,7 +191,7 @@ public class Controller {
 
         transaction.setAccountSender(null);
         transaction.setAccountRecipient(userAccount);
-
+        checkGenerator.saveCheckInFile(transaction);
         return transactionService.saveTransaction(transaction);
     }
 
@@ -178,7 +201,7 @@ public class Controller {
 
         transaction.setAccountSender(userAccount);
         transaction.setAccountRecipient(recepientAccount);
-
+        checkGenerator.saveCheckInFile(transaction);
         return transactionService.saveTransaction(transaction);
     }
 
@@ -267,5 +290,132 @@ public class Controller {
             throw new RuntimeException(e);
         }
         return answer.equals("ДА") || answer.equals("YES");
+    }
+
+    public String returnAnswerFromMenuTwoPoints(BufferedReader reader) {
+        String answer = null;
+        while (answer == null) {
+            try {
+                answer = reader.readLine();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            switch (answer) {
+                case ("1") -> {
+                    return "1";
+                }
+                case ("2") -> {
+                    return "2";
+                }
+                default -> {
+                    System.out.println(INCORRECT_CHOICE_FROM_MENU);
+                    answer = null;
+                }
+            }
+        }
+        return answer;
+    }
+
+    public String returnAnswerFromMenuThreePoints(BufferedReader reader) {
+        String answer = null;
+        while (answer == null) {
+            try {
+                answer = reader.readLine();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            switch (answer) {
+                case ("1") -> {
+                    return "1";
+                }
+                case ("2") -> {
+                    return "2";
+                }
+                case ("3") -> {
+                    return "3";
+                }
+                default -> {
+                    System.out.println(INCORRECT_CHOICE_FROM_MENU);
+                    answer = null;
+                }
+            }
+        }
+        return answer;
+    }
+
+    public void accountStatementOutput(BufferedReader reader, Account userAccount) {
+        LocalDateTime fromDate;
+        LocalDateTime toDate;
+        System.out.print(CHOOSE_PERIOD);
+        switch (returnAnswerFromMenuThreePoints(reader)) {
+            case ("1") -> {
+                int year = selectionYear(reader);
+                int month = selectionMonth(reader);
+                fromDate = LocalDateTime.of(year, month, 1, 0, 0, 0, 0);
+                if (month == 1 || month == 3 || month == 5 || month == 7 || month == 8 || month == 10 || month == 12) {
+                    toDate = LocalDateTime.of(year, month, 31, 23, 59, 59, 999_999_000);
+                } else if (month == 4 || month == 6 || month == 9 || month == 11) {
+                    toDate = LocalDateTime.of(year, month, 30, 23, 59, 59, 999_999_000);
+                } else {
+                    if (year % 4 == 0) {
+                        toDate = LocalDateTime.of(year, month, 29, 23, 59, 59, 999_999_000);
+                    } else {
+                        toDate = LocalDateTime.of(year, month, 28, 23, 59, 59, 999_999_000);
+                    }
+                }
+                List<Transaction> transactionsByUserIdAndPeriod =
+                        transactionService.getTransactionsByUserIdAndPeriod(userAccount.getId(), fromDate, toDate);
+                accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate);
+            }
+            case ("2") -> {
+                int year = selectionYear(reader);
+                fromDate = LocalDateTime.of(year, 1, 1, 0, 0, 0, 0);
+                toDate = LocalDateTime.of(year, 12, 31, 0, 0, 0, 999_999_000);
+                List<Transaction> transactionsByUserIdAndPeriod =
+                        transactionService.getTransactionsByUserIdAndPeriod(userAccount.getId(), fromDate, toDate);
+                accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate);
+            }
+            case ("3") -> {
+                fromDate = LocalDateTime.of(1970, 1, 1, 0, 0, 0, 0);
+                toDate = LocalDateTime.now();
+                List<Transaction> transactionsByUserIdAndPeriod =
+                        transactionService.getTransactionsByUserIdAndPeriod(userAccount.getId(), fromDate, toDate);
+                accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate);
+            }
+        }
+
+    }
+
+    private int selectionMonth(BufferedReader reader) {
+        System.out.print(CHOOSE_MONTH);
+        int month = 0;
+        while (month < 1 || month > 12) {
+            try {
+                month = Integer.parseInt(reader.readLine());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if (month < 1 || month > 12) {
+                System.out.println(INCORRECT_CHOICE_FROM_MENU);
+            }
+        }
+        return month;
+    }
+
+    private int selectionYear(BufferedReader reader) {
+        int currentYear = LocalDateTime.now().getYear();
+        System.out.printf(CHOOSE_YEAR, currentYear);
+        int year = 0;
+        while (year < 1970 || year > currentYear) {
+            try {
+                year = Integer.parseInt(reader.readLine());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            if (year < 1970 || year > currentYear) {
+                System.out.println(INCORRECT_CHOICE_FROM_MENU);
+            }
+        }
+        return year;
     }
 }

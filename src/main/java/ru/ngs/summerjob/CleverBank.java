@@ -19,9 +19,9 @@ public class CleverBank {
         scheduler.scheduleAtFixedRate(new InterestTimer(), 0, 30, TimeUnit.SECONDS);
 
 
+
         while (true) {
             Controller controller = new Controller();
-
             System.out.println("Добро пожаловать в приложение Clever-Bank!");
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             User user = controller.userAuthorizationMethod(reader);
@@ -31,61 +31,86 @@ public class CleverBank {
 
             boolean tryAgain = false;
             do {
-                System.out.print("""                
+                System.out.print("""
+                        Что вас интересует?
+                        1. Операции со счетом.
+                        2. Получить выписку по счету.
+                        """);
+                switch (controller.returnAnswerFromMenuTwoPoints(reader)) {
+                    case ("1") -> {
+                        System.out.print("""                
                         Выберите операцию, которая Вас интересует:
                         1. Пополнение счета.
                         2. Снятие средств.
                         3. Перевод на счет другого лица.
                         4. Выход из приложения.
                         """);
-                TransactionType transactionType = controller.selectionOfTransactionType(reader);
-                if (transactionType.getId() == 0) {
-                    continue;
-                }
+                        TransactionType transactionType = controller.selectionOfTransactionType(reader);
+                        if (transactionType.getId() == 0) {
+                            continue;
+                        }
 
-                System.out.printf("""
+                        System.out.printf("""
                         Вы выбрали "%s"
                                         
                         В настоящее время у Вас открыты следующие счета:
                         %s
                         Выберите с каким счетом вы хотите произвести данную операцию.
                         """, transactionType.getName(), controller.createAccountsMenu(user.getId()));
-                Account userAccount = controller.selectionOfAccount(reader, user.getId());
+                        Account userAccount = controller.selectionOfAccount(reader, user.getId());
 
-                switch ((int) transactionType.getId()) {
-                    case 3 -> {
-                        System.out.println("Пожалуйста введите сумму для пополнения баланса (не может быть меньше 1 копейки):");
-                        double amount = controller.readAmount(reader);
-                        if (controller.replenishmentOfOwnAccount(userAccount, transactionType, amount)) {
-                            System.out.println(ACCEPTED);
-                        }
-                    }
-                    case 2 -> {
-                        System.out.println("Пожалуйста введите сумму для снятия со счета (не может быть меньше 1 копейки):");
-                        double amount = controller.readAmount(reader);
-                        if (controller.withdrawFromOwnAccount(userAccount, transactionType, amount)) {
-                            System.out.println(ACCEPTED);
-                        }
-                    }
-                    case 1 -> {
-                        System.out.print("""
+                        switch ((int) transactionType.getId()) {
+                            case 3 -> {
+                                System.out.println("Пожалуйста введите сумму для пополнения баланса (не может быть меньше 1 копейки):");
+                                double amount = controller.readAmount(reader);
+                                if (controller.replenishmentOfOwnAccount(userAccount, transactionType, amount)) {
+                                    System.out.println(ACCEPTED);
+                                }
+                            }
+                            case 2 -> {
+                                System.out.println("Пожалуйста введите сумму для снятия со счета (не может быть меньше 1 копейки):");
+                                double amount = controller.readAmount(reader);
+                                if (controller.withdrawFromOwnAccount(userAccount, transactionType, amount)) {
+                                    System.out.println(ACCEPTED);
+                                }
+                            }
+                            case 1 -> {
+                                System.out.print("""
                                 Пожалуйста введите номер счета получателя.
                                 Формат: XXXX XXXX XXXX XXXX XXXX XXXX XXXX
                                 """);
-                        Account recepientAccount = controller.readAccountByName(reader, userAccount);
+                                Account recepientAccount = controller.readAccountByName(reader, userAccount);
 
-                        System.out.println("Пожалуйста введите сумму для перевода (не может быть меньше 1 копейки):");
-                        double amount = controller.readAmount(reader);
-                        if (controller.remittance(userAccount, recepientAccount, transactionType, amount)) {
-                            System.out.println(ACCEPTED);
+                                System.out.println("Пожалуйста введите сумму для перевода (не может быть меньше 1 копейки):");
+                                double amount = controller.readAmount(reader);
+                                if (controller.remittance(userAccount, recepientAccount, transactionType, amount)) {
+                                    System.out.println(ACCEPTED);
+                                }
+                            }
                         }
-                    }
-                }
-                System.out.print("""
-                        Желаете совершить еще операции по счетам?
+                        System.out.print("""
+                        Желаете совершить продолжить работу с приложением?
                         Введите ДА или YES для продолжения работы либо любой другой текст для выхода из приложения.
                         """);
-                tryAgain = controller.isContinue(reader);
+                        tryAgain = controller.isContinue(reader);
+                    }
+                    case ("2") -> {
+                        System.out.printf("""                                   
+                        В настоящее время у Вас открыты следующие счета:
+                        %s
+                        Выберите с каким счетом вы хотите произвести данную операцию.
+                        """, controller.createAccountsMenu(user.getId()));
+                        Account userAccount = controller.selectionOfAccount(reader, user.getId());
+
+                        controller.accountStatementOutput(reader, userAccount);
+
+                        System.out.print("""
+                        Желаете совершить продолжить работу с приложением?
+                        Введите ДА или YES для продолжения работы либо любой другой текст для выхода из приложения.
+                        """);
+                        tryAgain = controller.isContinue(reader);
+                    }
+                }
             } while (tryAgain);
         }
     }

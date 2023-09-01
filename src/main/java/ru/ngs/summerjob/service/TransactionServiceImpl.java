@@ -4,6 +4,7 @@ import ru.ngs.summerjob.dao.TransactionDAO;
 import ru.ngs.summerjob.dao.TransactionDAOImpl;
 import ru.ngs.summerjob.entity.Transaction;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class TransactionServiceImpl implements TransactionService {
@@ -19,8 +20,8 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public List<Transaction> getTransactionsByUserId(long id) {
-        return transactionDAO.getTransactionsByUserId(id);
+    public List<Transaction> getTransactionsByUserIdAndPeriod(long id, LocalDateTime fromDate, LocalDateTime toDate) {
+        return transactionDAO.getTransactionsByUserIdAndPeriod(id, fromDate, toDate);
     }
 
     @Override

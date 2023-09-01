@@ -49,6 +49,7 @@ public class CheckGenerator {
         } else {
             amount = transaction.getAmount();
         }
+        String amountString = String.format("%.2f", amount);
         return String.format(CHECK_TEMPLATE,
                 fillDate(transaction.getDate()),
                 fillTime(transaction.getDate()),
@@ -57,7 +58,7 @@ public class CheckGenerator {
                 fillLeftSpaces(transaction.getAccountRecipient().getBank().getName()),
                 fillLeftSpaces(accountSender),
                 fillLeftSpaces(transaction.getAccountRecipient().getName()),
-                fillLeftSpaces(String.valueOf(amount)));
+                fillLeftSpaces(amountString));
     }
     public void saveCheckInFile(Transaction transaction) {
         long checkNumber = checkDao.saveCheck(new Check());
@@ -73,12 +74,12 @@ public class CheckGenerator {
         return String.format("%" + numberOfCharacters + "s", string);
     }
 
-    private Object fillTime(LocalDateTime date) {
+    private String fillTime(LocalDateTime date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
         return date.format(formatter);
     }
 
-    private Object fillDate(LocalDateTime date) {
+    private String fillDate(LocalDateTime date) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-LL-yyyy");
         return date.format(formatter);
     }
