@@ -7,6 +7,13 @@ import java.util.List;
 
 public interface TransactionService {
     Transaction getTransactionById(long id);
+
+    Transaction saveTransactionForServlet(Transaction transaction);
+
+    Transaction updateTransaction(Transaction transaction);
+
+    String deleteTransactionById(long id);
+
     List<Transaction> getTransactionsByUserIdAndPeriod(long id, LocalDateTime fromDate, LocalDateTime toDate);
 
     boolean saveTransaction(Transaction transaction);

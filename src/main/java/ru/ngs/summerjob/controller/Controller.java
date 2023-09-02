@@ -239,7 +239,7 @@ public class Controller {
             String accountName;
             while (true) {
                 try {
-                    if (isCorrectCountName(accountName = reader.readLine().toUpperCase())) break;
+                    if (isCorrectAccountName(accountName = reader.readLine().toUpperCase())) break;
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -257,7 +257,7 @@ public class Controller {
         return account;
     }
 
-    public static boolean isCorrectCountName(String answer) {
+    public static boolean isCorrectAccountName(String answer) {
         String[] strings = answer.split(" ");
         boolean ans = false;
         if (strings.length == 7) {

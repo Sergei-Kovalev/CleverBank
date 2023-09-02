@@ -18,8 +18,6 @@ public class CleverBank {
         ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
         scheduler.scheduleAtFixedRate(new InterestTimer(), 0, 30, TimeUnit.SECONDS);
 
-
-
         while (true) {
             Controller controller = new Controller();
             System.out.println("Добро пожаловать в приложение Clever-Bank!");

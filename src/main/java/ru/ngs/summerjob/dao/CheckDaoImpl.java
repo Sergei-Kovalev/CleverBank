@@ -28,6 +28,11 @@ public class CheckDaoImpl implements CheckDao {
     }
 
     private Connection getConnection() throws SQLException {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         return DriverManager.getConnection(
                 Config.getConfig().get("db").get("url"),
                 Config.getConfig().get("db").get("login"),
