@@ -12,23 +12,27 @@ import static java.sql.Types.NULL;
 
 public class TransactionDAOImpl implements TransactionDAO {
     private final static String FIND_BY_ID = "SELECT * FROM transactions WHERE id = ?";
+    private final static String SAVE_TRANSACTION = """
+            INSERT INTO transactions(transaction_date, transaction_type_id, sender_account_id, recipient_account_id, amount)
+            VALUES
+                (?, ?, ?, ?, ?);""";
+    private final static String UPDATE_TRANSACTION_AMOUNT = """
+            UPDATE transactions
+            SET amount = ?
+            WHERE id = ?;
+            """;
+    private final static String DELETE_TRANSACTION_BY_ID = "DELETE FROM transactions WHERE id = ?";
 
     private final static String FIND_BY_USER_ID_AND_PERIOD = """
             SELECT * FROM transactions
             WHERE (transaction_date BETWEEN ? AND ?)
             AND (sender_account_id = ? OR recipient_account_id = ?);
             """;
-    private final static String SAVE_TRANSACTION = """
-            INSERT INTO transactions(transaction_date, transaction_type_id, sender_account_id, recipient_account_id, amount)
-            VALUES
-                (?, ?, ?, ?, ?);""";
-
     private final static String APPEND_FOR_REPLENISHMENT_AND_WITHDRAW = """
             UPDATE accounts
             SET balance = ?
             WHERE id = ?;
             """;
-
 
     TransactionTypeDAO transactionTypeDAO;
     AccountDAO accountDAO;
@@ -53,6 +57,61 @@ public class TransactionDAOImpl implements TransactionDAO {
             throw new RuntimeException(e);
         }
         return transaction;
+    }
+    @Override
+    public Transaction saveTransactionForServlet(Transaction transaction) {
+        long id = 0;
+        try(Connection connection = getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(SAVE_TRANSACTION, Statement.RETURN_GENERATED_KEYS);
+            statement.setTimestamp(1, Timestamp.valueOf(transaction.getDate()));
+            statement.setLong(2, transaction.getType().getId());
+            if (transaction.getAccountSender().getId() == 0) {
+                statement.setNull(3, NULL);
+            } else {
+                statement.setLong(3, transaction.getAccountSender().getId());
+            }
+            statement.setLong(4, transaction.getAccountRecipient().getId());
+            statement.setDouble(5, transaction.getAmount());
+            statement.executeUpdate();
+            ResultSet resultSet = statement.getGeneratedKeys();
+            if (resultSet.next()) {
+                id = resultSet.getLong("id");
+            }
+            transaction.setId(id);
+            return transaction;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public Transaction updateTransaction(Transaction transaction) {
+        try(Connection connection = getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(UPDATE_TRANSACTION_AMOUNT);
+            statement.setDouble(1, transaction.getAmount());
+            statement.setLong(2, transaction.getId());
+            statement.executeUpdate();
+            return getTransactionById(transaction.getId());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public String deleteTransactionById(long id) {
+        try(Connection connection = getConnection()) {
+            Transaction transaction = getTransactionById(id);
+            if (transaction.getId() == 0) {
+                return "Транзакций с таким id нет в базе данных";
+            } else {
+                PreparedStatement statement = connection.prepareStatement(DELETE_TRANSACTION_BY_ID);
+                statement.setLong(1, id);
+                statement.executeUpdate();
+                return "Транзакция с id " + id + " удалена.";
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
     @Override
     public List<Transaction> getTransactionsByUserIdAndPeriod(long userId, LocalDateTime fromDate, LocalDateTime toDate) {
@@ -142,6 +201,11 @@ public class TransactionDAOImpl implements TransactionDAO {
     }
 
     private Connection getConnection() throws SQLException {
+        try {
+            Class.forName("org.postgresql.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
         return DriverManager.getConnection(
                 Config.getConfig().get("db").get("url"),
                 Config.getConfig().get("db").get("login"),

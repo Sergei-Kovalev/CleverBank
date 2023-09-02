@@ -15,4 +15,20 @@ public class CurrencyServiceImpl implements CurrencyService {
     public Currency getCurrencyById(long id) {
         return currencyDAO.getCurrencyById(id);
     }
+
+    @Override
+    public Currency saveCurrency(Currency currency) {
+        return currencyDAO.saveCurrency(currency);
+    }
+
+    @Override
+    public Currency updateCurrency(Currency currency) {
+        return currencyDAO.updateCurrency(currency);
+    }
+
+    @Override
+    public String deleteCurrency(long id) {
+        return currencyDAO.deleteCurrency(id);
+    }
+
 }

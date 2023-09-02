@@ -16,4 +16,20 @@ public class TransactionTypeServiceImpl implements TransactionTypeService {
     public TransactionType getTransactionTypeById(long id) {
         return transactionTypeDAO.getTransactionTypeById(id);
     }
+
+    @Override
+    public TransactionType saveTransactionType(TransactionType transactionType) {
+        return transactionTypeDAO.saveTransactionType(transactionType);
+    }
+
+    @Override
+    public TransactionType updateTransactionType(TransactionType transactionType) {
+        return transactionTypeDAO.updateTransactionType(transactionType);
+    }
+
+    @Override
+    public String deleteTransactionTypeById(long id) {
+        return transactionTypeDAO.deleteTransactionTypeById(id);
+    }
+
 }

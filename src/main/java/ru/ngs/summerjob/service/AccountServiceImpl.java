@@ -19,6 +19,21 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
+    public Account saveAccount(Account account) {
+        return accountDAO.saveAccount(account);
+    }
+
+    @Override
+    public Account updateAccount(Account account) {
+        return accountDAO.updateAccount(account);
+    }
+
+    @Override
+    public String deleteAccount(long id) {
+        return accountDAO.deleteAccount(id);
+    }
+
+    @Override
     public List<Account> getAccountsByUserId(long userId) {
         return accountDAO.getAccountsByUserId(userId);
     }

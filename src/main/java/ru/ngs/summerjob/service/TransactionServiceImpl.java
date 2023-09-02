@@ -20,6 +20,21 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public Transaction saveTransactionForServlet(Transaction transaction) {
+        return transactionDAO.saveTransactionForServlet(transaction);
+    }
+
+    @Override
+    public Transaction updateTransaction(Transaction transaction) {
+        return transactionDAO.updateTransaction(transaction);
+    }
+
+    @Override
+    public String deleteTransactionById(long id) {
+        return transactionDAO.deleteTransactionById(id);
+    }
+
+    @Override
     public List<Transaction> getTransactionsByUserIdAndPeriod(long id, LocalDateTime fromDate, LocalDateTime toDate) {
         return transactionDAO.getTransactionsByUserIdAndPeriod(id, fromDate, toDate);
     }

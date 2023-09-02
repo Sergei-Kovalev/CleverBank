@@ -20,4 +20,19 @@ public class BankServiceImpl implements BankService {
     public Bank getBankByName(String name) {
         return bankDAO.getBankByName(name);
     }
+
+    @Override
+    public Bank saveBank(Bank bank) {
+        return bankDAO.saveBank(bank);
+    }
+
+    @Override
+    public Bank updateBank(Bank bank) {
+        return bankDAO.updateBank(bank);
+    }
+
+    @Override
+    public String deleteBank(long id) {
+        return bankDAO.deleteBank(id);
+    }
 }

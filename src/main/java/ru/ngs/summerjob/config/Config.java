@@ -14,7 +14,12 @@ public class Config {
             Yaml yaml = new Yaml();
             return yaml.load(inputStream);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            try (InputStream inputStream = Config.class.getClassLoader().getResourceAsStream("properties.yml")) {
+                Yaml yaml = new Yaml();
+                return yaml.load(inputStream);
+            } catch (IOException exception) {
+                throw new RuntimeException(exception);
+            }
         }
     }
 
