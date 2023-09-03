@@ -1,0 +1,8 @@
+ru.ngs.summerjob
+ru.ngs.summerjob.config
+ru.ngs.summerjob.controller
+ru.ngs.summerjob.dao
+ru.ngs.summerjob.entity
+ru.ngs.summerjob.service
+ru.ngs.summerjob.utils
+ru.ngs.summerjob.web
