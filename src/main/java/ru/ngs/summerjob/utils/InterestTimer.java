@@ -6,18 +6,40 @@ import ru.ngs.summerjob.entity.Bank;
 import ru.ngs.summerjob.entity.Transaction;
 import ru.ngs.summerjob.service.*;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author Sergey Kovalev
+ * Утилитный класс реализующий начисление процентов по счету 31 декабря в 23:59.
+ * Является имплементацие интерфейса:
+ * @see Runnable
+ */
 public class InterestTimer implements Runnable {
+    /**
+     * Это поле для загрузки сервиса получающего необходимы данные из БД.
+     * @see BankService
+     */
     BankService bankService;
+    /**
+     * Это поле для загрузки сервиса получающего необходимы данные из БД.
+     * @see AccountService
+     */
     AccountService accountService;
+    /**
+     * Это поле для загрузки сервиса получающего необходимы данные из БД.
+     * @see TransactionTypeService
+     */
     TransactionTypeService transactionTypeService;
+    /**
+     * Это поле для загрузки сервиса получающего необходимы данные из БД.
+     * @see TransactionService
+     */
     TransactionService transactionService;
 
+    /**
+     * Конструктор, загружает необходимые имплементации сервисов.
+     */
     public InterestTimer() {
         this.bankService = new BankServiceImpl();
         this.accountService = new AccountServiceImpl();
@@ -25,6 +47,9 @@ public class InterestTimer implements Runnable {
         this.transactionTypeService = new TransactionTypeServiceImpl();
     }
 
+    /**
+     * Главный метод сервиса реализующий метод run интерфейса.
+     */
     @Override
     public void run() {
 
@@ -32,7 +57,7 @@ public class InterestTimer implements Runnable {
 
         LocalDateTime time = LocalDateTime.now();
 
-        if (time.getMonthValue() == 8
+        if (time.getMonthValue() == 12
                 && time.getDayOfMonth() == 31
                 && time.getHour() == 23
                 && time.getMinute() == 59

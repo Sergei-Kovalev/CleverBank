@@ -11,35 +11,66 @@ import java.util.List;
 
 import static java.sql.Types.NULL;
 
+/**
+ * @author Sergey Kovalev
+ * Класс выполняющий роль dao
+ * и имплементирующий интерфейс:
+ * @see TransactionDAO
+ */
 public class TransactionDAOImpl implements TransactionDAO {
+    /**
+     * Константа для SQL запроса поиска транзакции по id.
+     */
     private final static String FIND_BY_ID = "SELECT * FROM transactions WHERE id = ?";
+    /**
+     * Константа для SQL запроса сохранения новой транзакции.
+     */
     private final static String SAVE_TRANSACTION = """
             INSERT INTO transactions(transaction_date, transaction_type_id, sender_account_id, recipient_account_id, amount)
             VALUES
-                (?, ?, ?, ?, ?);""";
+                (?, ?, ?, ?, ?);
+            """;
+    /**
+     * Константа для SQL запроса обновления данных транзакции.
+     */
     private final static String UPDATE_TRANSACTION_AMOUNT = """
             UPDATE transactions
             SET amount = ?
             WHERE id = ?;
             """;
+    /**
+     * Константа для SQL запроса удаления транзакции по id.
+     */
     private final static String DELETE_TRANSACTION_BY_ID = "DELETE FROM transactions WHERE id = ?";
 
+    /**
+     * Константа для SQL запроса поиска транзакций клиента за указанный период.
+     */
     private final static String FIND_BY_USER_ID_AND_PERIOD = """
             SELECT * FROM transactions
             WHERE (transaction_date BETWEEN ? AND ?)
             AND (sender_account_id = ? OR recipient_account_id = ?);
             """;
+    /**
+     * Константа для SQL запроса изменения баланса счёта (пополнение и расход).
+     */
     private final static String APPEND_FOR_REPLENISHMENT_AND_WITHDRAW = """
             UPDATE accounts
             SET balance = ?
             WHERE id = ?;
             """;
+    /**
+     * Константа для SQL запроса расчёта приходных операций по счёту.
+     */
     private final static String SUM_FROM_INCOME = """
            SELECT SUM(amount) AS sum FROM transactions
             WHERE (transaction_date BETWEEN ? AND ?)
             AND (recipient_account_id = ?)
             AND (transaction_type_id = 1 OR transaction_type_id = 3 OR transaction_type_id = 4);
             """;
+    /**
+     * Константа для SQL запроса расчёта расходных операций по счёту.
+     */
     private final static String SUM_FROM_OUTCOME = """
            SELECT SUM(amount) AS sum FROM transactions
             WHERE (transaction_date BETWEEN ? AND ?)
@@ -47,15 +78,33 @@ public class TransactionDAOImpl implements TransactionDAO {
             OR (sender_account_id = ?);
             """;
 
+    /**
+     * Это поле для загрузки сервиса получающего необходимы данные из БД.
+     * @see TransactionTypeDAO
+     */
     TransactionTypeDAO transactionTypeDAO;
+    /**
+     * Это поле для загрузки сервиса получающего необходимы данные из БД.
+     * @see AccountDAO
+     */
     AccountDAO accountDAO;
 
-
+    /**
+     * Конструктор класса. Загружает необходимые имплементации сервисов.
+     */
     public TransactionDAOImpl() {
         this.transactionTypeDAO = new TransactionTypeDAOImpl();
         this.accountDAO = new AccountDAOImpl();
     }
 
+    /**
+     * Метод возвращающий сумму всех приходных операций по счёту.
+     * @param account - счёт по которому нужно получить операции.
+     * @param fromDate - дата начала операций по счёту.
+     * @param toDate - дата окончания операций по счёту.
+     * @return сумму приходных операций.
+     */
+    @Override
     public double getTotalIncome(Account account, LocalDateTime fromDate, LocalDateTime toDate) {
         double income = 0;
         try(Connection connection = getConnection()) {
@@ -72,6 +121,14 @@ public class TransactionDAOImpl implements TransactionDAO {
             throw new RuntimeException(e);
         }
     }
+    /**
+     * Метод возвращающий сумму всех расходных операций по счёту.
+     * @param account - счёт по которому нужно получить операции.
+     * @param fromDate - дата начала операций по счёту.
+     * @param toDate - дата окончания операций по счёту.
+     * @return сумму расходных операций.
+     */
+    @Override
     public double getTotalOutcome(Account account, LocalDateTime fromDate, LocalDateTime toDate) {
         double outcome = 0;
         try(Connection connection = getConnection()) {
@@ -89,7 +146,12 @@ public class TransactionDAOImpl implements TransactionDAO {
             throw new RuntimeException(e);
         }
     }
-
+    /**
+     * Имплементация метода получения транзакции по id.
+     * @see Transaction
+     * @param id - id транзакции.
+     * @return возвращает объект транзакции.
+     */
     @Override
     public Transaction getTransactionById(long id) {
         Transaction transaction = new Transaction();
@@ -105,6 +167,12 @@ public class TransactionDAOImpl implements TransactionDAO {
         }
         return transaction;
     }
+    /**
+     * Имплементация сохранения транзакции (для использования в сервлете).
+     * @see Transaction
+     * @param transaction - принимает объект транзакции.
+     * @return объект сохраненной транзакции.
+     */
     @Override
     public Transaction saveTransactionForServlet(Transaction transaction) {
         long id = 0;
@@ -130,7 +198,12 @@ public class TransactionDAOImpl implements TransactionDAO {
             throw new RuntimeException(e);
         }
     }
-
+    /**
+     * Имплементация метода обновления данных транзакции.
+     * @see Transaction
+     * @param transaction - объект транзакции для изменения.
+     * @return возвращает изменённый объкт транзакции.
+     */
     @Override
     public Transaction updateTransaction(Transaction transaction) {
         try(Connection connection = getConnection()) {
@@ -143,7 +216,11 @@ public class TransactionDAOImpl implements TransactionDAO {
             throw new RuntimeException(e);
         }
     }
-
+    /**
+     * Имплементация удаления транзакции по id.
+     * @param id - id транзакции для удаления из БД.
+     * @return возвращает сообщение об успешном удалении.
+     */
     @Override
     public String deleteTransactionById(long id) {
         try(Connection connection = getConnection()) {
@@ -160,6 +237,15 @@ public class TransactionDAOImpl implements TransactionDAO {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Имплементация получения списка транзакций клиента за указанный период.
+     * @see Transaction
+     * @param userId - объект клиента.
+     * @param fromDate - дата начала операций.
+     * @param toDate - дата окончания операций.
+     * @return список транзакций клиента за период.
+     */
     @Override
     public List<Transaction> getTransactionsByUserIdAndPeriod(long userId, LocalDateTime fromDate, LocalDateTime toDate) {
         List<Transaction> transactions = new ArrayList<>();
@@ -180,7 +266,12 @@ public class TransactionDAOImpl implements TransactionDAO {
         }
         return transactions;
     }
-
+    /**
+     * Имплементация сохранения транзакции (для использования в консольном приложении).
+     * @see Transaction
+     * @param transaction - принимает объект транзакции.
+     * @return true при успешном сохранении транзакции.
+     */
     @Override
     public boolean saveTransaction(Transaction transaction) {
         try(Connection connection = getConnection()) {
@@ -227,14 +318,24 @@ public class TransactionDAOImpl implements TransactionDAO {
         }
         return true;
     }
-
+    /**
+     * Вспомогательный метод для заполнения постоянных данных объекта транзакции (для сохранения).
+     * @param transaction - объект транзакции.
+     * @param statement - объект для SQL инъекции.
+     * @throws SQLException - ошибка SQL запроса.
+     */
     private static void fillConstantFieldsForSavingTransaction(Transaction transaction, PreparedStatement statement) throws SQLException {
         statement.setTimestamp(1, Timestamp.valueOf(transaction.getDate()));
         statement.setLong(2, transaction.getType().getId());
         statement.setLong(4, transaction.getAccountRecipient().getId());
         statement.setDouble(5, transaction.getAmount());
     }
-
+    /**
+     * Вспомогательный метод для заполнения данных объекта транзакции.
+     * @param resultSet - список результатов полученных по SQL запросу.
+     * @param transaction - объект транзакции для заполнения.
+     * @throws SQLException - ошибка SQL запроса.
+     */
     private void fillTransaction(ResultSet resultSet, Transaction transaction) throws SQLException {
         transaction.setId(resultSet.getLong("id"));
         transaction.setDate(resultSet.getTimestamp("transaction_date").toLocalDateTime());
@@ -246,7 +347,11 @@ public class TransactionDAOImpl implements TransactionDAO {
                 resultSet.getLong("recipient_account_id")));
         transaction.setAmount(resultSet.getDouble("amount"));
     }
-
+    /**
+     * Вспомогательный метод для получения подключения к базе данных.
+     * @return возращает объект для подключения к БД.
+     * @throws SQLException - ошибка SQL запроса.
+     */
     private Connection getConnection() throws SQLException {
         try {
             Class.forName("org.postgresql.Driver");
