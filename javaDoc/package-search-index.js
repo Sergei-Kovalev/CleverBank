@@ -1,0 +1,1 @@
+packageSearchIndex = [{"l":"All Packages","u":"allpackages-index.html"},{"l":"ru.ngs.summerjob"},{"l":"ru.ngs.summerjob.config"},{"l":"ru.ngs.summerjob.controller"},{"l":"ru.ngs.summerjob.dao"},{"l":"ru.ngs.summerjob.entity"},{"l":"ru.ngs.summerjob.service"},{"l":"ru.ngs.summerjob.utils"},{"l":"ru.ngs.summerjob.web"}];updateSearchResults();
