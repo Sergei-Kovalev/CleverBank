@@ -1,6 +1,7 @@
 package ru.ngs.summerjob.dao;
 
 import ru.ngs.summerjob.config.Config;
+import ru.ngs.summerjob.entity.Account;
 import ru.ngs.summerjob.entity.Transaction;
 
 import java.sql.*;
@@ -33,6 +34,18 @@ public class TransactionDAOImpl implements TransactionDAO {
             SET balance = ?
             WHERE id = ?;
             """;
+    private final static String SUM_FROM_INCOME = """
+           SELECT SUM(amount) AS sum FROM transactions
+            WHERE (transaction_date BETWEEN ? AND ?)
+            AND (recipient_account_id = ?)
+            AND (transaction_type_id = 1 OR transaction_type_id = 3 OR transaction_type_id = 4);
+            """;
+    private final static String SUM_FROM_OUTCOME = """
+           SELECT SUM(amount) AS sum FROM transactions
+            WHERE (transaction_date BETWEEN ? AND ?)
+            AND (recipient_account_id = ? AND transaction_type_id = 2 OR transaction_type_id = 5)
+            OR (sender_account_id = ?);
+            """;
 
     TransactionTypeDAO transactionTypeDAO;
     AccountDAO accountDAO;
@@ -41,6 +54,40 @@ public class TransactionDAOImpl implements TransactionDAO {
     public TransactionDAOImpl() {
         this.transactionTypeDAO = new TransactionTypeDAOImpl();
         this.accountDAO = new AccountDAOImpl();
+    }
+
+    public double getTotalIncome(Account account, LocalDateTime fromDate, LocalDateTime toDate) {
+        double income = 0;
+        try(Connection connection = getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(SUM_FROM_INCOME);
+            statement.setTimestamp(1, Timestamp.valueOf(fromDate));
+            statement.setTimestamp(2, Timestamp.valueOf(toDate));
+            statement.setLong(3, account.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                income = resultSet.getDouble("sum");
+            }
+            return income;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+    public double getTotalOutcome(Account account, LocalDateTime fromDate, LocalDateTime toDate) {
+        double outcome = 0;
+        try(Connection connection = getConnection()) {
+            PreparedStatement statement = connection.prepareStatement(SUM_FROM_OUTCOME);
+            statement.setTimestamp(1, Timestamp.valueOf(fromDate));
+            statement.setTimestamp(2, Timestamp.valueOf(toDate));
+            statement.setLong(3, account.getId());
+            statement.setLong(4, account.getId());
+            ResultSet resultSet = statement.executeQuery();
+            while (resultSet.next()) {
+                outcome = resultSet.getDouble("sum");
+            }
+            return -outcome;
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

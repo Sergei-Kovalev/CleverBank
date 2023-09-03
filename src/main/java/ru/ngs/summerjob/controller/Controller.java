@@ -5,6 +5,7 @@ import ru.ngs.summerjob.entity.Transaction;
 import ru.ngs.summerjob.entity.TransactionType;
 import ru.ngs.summerjob.entity.User;
 import ru.ngs.summerjob.service.*;
+import ru.ngs.summerjob.utils.AbstractStatementGenerator;
 import ru.ngs.summerjob.utils.AccountStatementGenerator;
 import ru.ngs.summerjob.utils.CheckGenerator;
 
@@ -55,7 +56,7 @@ public class Controller {
     AccountService accountService;
     TransactionService transactionService;
     CheckGenerator checkGenerator;
-    AccountStatementGenerator accountStatementGenerator;
+    AbstractStatementGenerator accountStatementGenerator;
 
     public Controller() {
         this.userService = new UserServiceImpl();
@@ -365,7 +366,7 @@ public class Controller {
                 }
                 List<Transaction> transactionsByUserIdAndPeriod =
                         transactionService.getTransactionsByUserIdAndPeriod(userAccount.getId(), fromDate, toDate);
-                accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate);
+                accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate, 0, 0);
             }
             case ("2") -> {
                 int year = selectionYear(reader);
@@ -373,14 +374,14 @@ public class Controller {
                 toDate = LocalDateTime.of(year, 12, 31, 0, 0, 0, 999_999_000);
                 List<Transaction> transactionsByUserIdAndPeriod =
                         transactionService.getTransactionsByUserIdAndPeriod(userAccount.getId(), fromDate, toDate);
-                accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate);
+                accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate, 0, 0);
             }
             case ("3") -> {
                 fromDate = LocalDateTime.of(1970, 1, 1, 0, 0, 0, 0);
                 toDate = LocalDateTime.now();
                 List<Transaction> transactionsByUserIdAndPeriod =
                         transactionService.getTransactionsByUserIdAndPeriod(userAccount.getId(), fromDate, toDate);
-                accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate);
+                accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate, 0, 0);
             }
         }
 
