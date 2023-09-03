@@ -12,14 +12,33 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * @author Sergey Kovalev
+ * Утилитный класс для формирования и сохранения statemen-money.pdf.
+ * Является реализацией абстрактного класса:
+ * @see AbstractStatementGenerator
+ */
 public class StatementMoneyGenerator extends AbstractStatementGenerator {
-
-    private final static String head = "                        Money Statement";
+    /**
+     * Поле для шапки отчёта.
+     */
+    private final static String HEAD = "                        Money Statement";
+    /**
+     * Поле для концовки отчёта.
+     */
     private final static String END_OF_STATEMENT = """
                                         Приход | Уход
                         -------------------------------------------
                         """;
 
+    /**
+     * Метод для сохранения сформированного отчёта в папке: /statement-money
+     * Из за особенностей работы в Intillj Idea Community Edition сохранение производится
+     * в папке Tomcat'а в директории /bin
+     * @param accountStatement - сформированный отчёт в String поле.
+     * @param fromDate - дата начала формирования отчёта.
+     * @param toDate - дата окончания формированя отчёта.
+     */
     @Override
     public void accountStatementOutputInFile(String accountStatement, LocalDateTime fromDate, LocalDateTime toDate) {
         String fileName = "Account statement" + fillDate(fromDate) + "-" + fillDate(toDate);
@@ -68,10 +87,23 @@ public class StatementMoneyGenerator extends AbstractStatementGenerator {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Метод возвращающий шапку отчёта
+     * @return возвращает строку из константы HEAD.
+     */
     @Override
     public String fillHead() {
-        return head;
+        return HEAD;
     }
+
+    /**
+     * Метод возвращающий нижние колонки.
+     * @param transactions - в данной реализации не используется.
+     * @param totalIncome - принимает общую сумму пополненных разными способами средсв.
+     * @param totalOutcome - принимает общую сумму расходов по счету.
+     * @return - возвращает строку с заполненными полями.
+     */
     @Override
     public String fillTransactionsColumns(List<Transaction> transactions, double totalIncome, double totalOutcome) {
         StringBuilder builder = new StringBuilder();

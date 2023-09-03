@@ -14,34 +14,65 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
 
-//TODO будет содержать все использования сервисов нужных для приложения
+/**
+ * @author Sergey Kovalev
+ * Класс-контроллер для консольного приложения.
+ * Основной класс-клиент:
+ * @see ru.ngs.summerjob.CleverBank
+ */
 public class Controller {
-
+    /**
+     * Константа для вывода сообщения о неверных введенных данных в меню.
+     */
     private final static String INCORRECT_CHOICE_FROM_MENU =
             "Похоже Вы ввели некорректные данные. Попробуйте еще раз.";
+    /**
+     * Константа для вывода сообщения о вводе неверной суммы.
+     */
     private final static String INCORRECT_SUM =
             "Извините, Вы ввели некорректную сумму. Попробуйте еще раз.";
+    /**
+     * Константа для вывода сообщения о вводе неверного формата счёта.
+     */
     private final static String INCORRECT_ACCOUNT_FORMAT =
             "Извините, Вы ввели счёт неверного формата. Попробуйте еще раз.";
+    /**
+     * Константа для вывода сообщения о вводе счёта которого не существует в базе данных.
+     */
     private final static String INCORRECT_ACCOUNT_FROM_DB =
             "Извините, такого счета не существует, возможно Вы ошиблись при вводе. Попробуйте еще раз.";
+    /**
+     * Константа для вывода сообщения о попытке отправки перевода со счета на него самого.
+     */
     private final static String INCORRECT_ACCOUNT_YOURSELF =
             "Извините, Вы ввели счет получатель тот же что и отправитель - это не имеет смысла :). Попробуйте еще раз.";
+    /**
+     * Константа для вывода сообщения о завершении работы с программой.
+     */
     private final static String CLOSE_APP_CHOICE =
             """
                     Спасибо за программы нашего банка. Всего доброго!
                     __________________________________________________________________________________________
-                    
+                                        
                     """;
+    /**
+     * Константа для вывода сообщения о выборе периода.
+     */
     private final static String CHOOSE_PERIOD = """
             Пожалуйста выберите какой формат выписки Вас интересует:
             1. За месяц.
             2. За год.
             3. За весь период.
             """;
+    /**
+     * Константа для вывода сообщения о вводе года.
+     */
     private final static String CHOOSE_YEAR = """
             Пожалуйста введите год (должен быть между 1970 и %s):
             """;
+    /**
+     * Константа для вывода сообщения о выборе месяца.
+     */
     private final static String CHOOSE_MONTH = """
             Пожалуйста, выберите месяц (по номеру):
             1. Январь           7. Июль
@@ -51,13 +82,40 @@ public class Controller {
             5. Май             11. Ноябрь
             6. Июнь            12. Декабрь
             """;
-    UserService userService;
-    TransactionTypeService transactionTypeService;
-    AccountService accountService;
-    TransactionService transactionService;
-    CheckGenerator checkGenerator;
-    AbstractStatementGenerator accountStatementGenerator;
 
+    /**
+     * Это поле для загрузки сервиса.
+     * @see UserService
+     */
+    UserService userService;
+    /**
+     * Это поле для загрузки сервиса.
+     * @see TransactionTypeService
+     */
+    TransactionTypeService transactionTypeService;
+    /**
+     * Это поле для загрузки сервиса.
+     * @see AccountService
+     */
+    AccountService accountService;
+    /**
+     * Это поле для загрузки сервиса.
+     * @see TransactionService
+     */
+    TransactionService transactionService;
+    /**
+     * Это поле для загрузки сервиса.
+     * @see CheckGenerator
+     */
+    CheckGenerator checkGenerator;
+    /**
+     * Это поле для загрузки абстрактного класса.
+     * @see AccountStatementGenerator
+     */
+    AbstractStatementGenerator accountStatementGenerator;
+    /**
+     * Конструктор класса. Загружает необходимые имплементации сервисов и абстрактных классов.
+     */
     public Controller() {
         this.userService = new UserServiceImpl();
         this.transactionTypeService = new TransactionTypeServiceImpl();
@@ -67,14 +125,33 @@ public class Controller {
         this.accountStatementGenerator = new AccountStatementGenerator();
     }
 
+    /**
+     * Получает объект класса клиент по логину и паролю.
+     * @see User
+     * @param login - логин клиента.
+     * @param password - пароль клиента.
+     * @return объект класса клиент.
+     */
     private User getUserByLoginAndPassword(String login, String password) {
         return userService.getUserByLoginAndPassword(login, password);
     }
-
+    /**
+     * Получает объект класса тип транзакции по id.
+     * @see TransactionType
+     * @param id - id клиента.
+     * @return объект класса тип транзакции.
+     */
     private TransactionType getTransactionTypeById(long id) {
         return transactionTypeService.getTransactionTypeById(id);
     }
 
+    /**
+     * Метод для авторизации клиента
+     * @see User
+     * Исполняется пока клиент не введёт верный логин и пароль либо откажется пробовать снова
+     * @param reader - объект для чтения данных из консоли.
+     * @return объект класса клиент.
+     */
     public User userAuthorizationMethod(BufferedReader reader) {
         User user = new User();
         user.setId(0);
@@ -99,7 +176,7 @@ public class Controller {
             user = getUserByLoginAndPassword(login, password);
 
             if (user.getId() == 0) {
-                System.out.println("Извините пользователя с таким именем/паролем не существует");
+                System.out.println("Извините клиента с таким именем/паролем не существует");
                 System.out.print("""
                         Желаете попробовать снова?
                         Введите ДА или YES для продолжения работы либо любой другой текст для выхода из приложения.
@@ -110,6 +187,12 @@ public class Controller {
         return user;
     }
 
+    /**
+     * Метод для выбора клиентом в меню возможных типов транзакций по счёту.
+     * @see TransactionType
+     * @param reader - объект для чтения данных из консоли.
+     * @return тип транзакции, которую выбрал клиент
+     */
     public TransactionType selectionOfTransactionType(BufferedReader reader) {
         TransactionType transactionType = null;
         String answer;
@@ -134,6 +217,13 @@ public class Controller {
         return transactionType;
     }
 
+    /**
+     * Метод для выбора клиентом счёта с которым он хочет производить операции.
+     * @see Account
+     * @param reader - объект для чтения данных из консоли.
+     * @param userId - id клиента.
+     * @return объект счёта.
+     */
     public Account selectionOfAccount(BufferedReader reader, long userId) {
         Account account = null;
         String answer;
@@ -162,6 +252,12 @@ public class Controller {
         return account;
     }
 
+    /**
+     * Метод для создания меню из всех счетов клиента.
+     * Может вернуть сообщение об отсутствии открытых счетов.
+     * @param userId - id клиента
+     * @return строку с меню сгенерированному из всех счетов клиента.
+     */
     public String createAccountsMenu(long userId) {
         StringBuilder menu = new StringBuilder();
         List<Account> allUserAccounts = accountService.getAccountsByUserId(userId);
@@ -176,6 +272,14 @@ public class Controller {
         return menu.toString();
     }
 
+    /**
+     * Метод пополнения собственного счёта клиентом.
+     * По завершении генерирует чек, хранящийся в папке /check проекта
+     * @param userAccount - объект счёта клиента.
+     * @param transactionType - объект типа транзакции.
+     * @param amount - сумма транзакции.
+     * @return true если операция завершена успешно.
+     */
     public boolean replenishmentOfOwnAccount(Account userAccount, TransactionType transactionType, double amount) {
         Transaction transaction = new Transaction();
         fillConstantFieldsForTransaction(transactionType, amount, transaction);
@@ -185,7 +289,14 @@ public class Controller {
         checkGenerator.saveCheckInFile(transaction);
         return transactionService.saveTransaction(transaction);
     }
-
+    /**
+     * Метод снятия средств со счёта клиентом.
+     * По завершении генерирует чек, хранящийся в папке /check проекта
+     * @param userAccount - объект счёта клиента.
+     * @param transactionType - объект типа транзакции.
+     * @param amount - сумма транзакции.
+     * @return true если операция завершена успешно.
+     */
     public boolean withdrawFromOwnAccount(Account userAccount, TransactionType transactionType, double amount) {
         Transaction transaction = new Transaction();
         fillConstantFieldsForTransaction(transactionType, amount, transaction);
@@ -195,7 +306,15 @@ public class Controller {
         checkGenerator.saveCheckInFile(transaction);
         return transactionService.saveTransaction(transaction);
     }
-
+    /**
+     * Метод пополнения перевода денег клиентом на счёт другого лица.
+     * По завершении генерирует чек, хранящийся в папке /check проекта
+     * @param userAccount - объект счёта клиента.
+     * @param transactionType - объект типа транзакции.
+     * @param recepientAccount - объект клиента-получателя транзакции.
+     * @param amount - сумма транзакции.
+     * @return true если операция завершена успешно.
+     */
     public boolean remittance(Account userAccount, Account recepientAccount, TransactionType transactionType, double amount) {
         Transaction transaction = new Transaction();
         fillConstantFieldsForTransaction(transactionType, amount, transaction);
@@ -206,12 +325,24 @@ public class Controller {
         return transactionService.saveTransaction(transaction);
     }
 
+    /**
+     * Метод для заполнения стандартных полей при генерации транзакции
+     * @param transactionType - объект типа транзакции.
+     * @param amount - сумма транзакции.
+     * @param transaction - транзакция для заполнения.
+     */
     private static void fillConstantFieldsForTransaction(TransactionType transactionType, double amount, Transaction transaction) {
         transaction.setDate(LocalDateTime.now());
         transaction.setType(transactionType);
         transaction.setAmount(amount);
     }
 
+    /**
+     * Метод возвращающий сумму транзакции, введенную клиентом.
+     * Также проверяет её на корректность ввода.
+     * @param reader - объект для чтения данных из консоли.
+     * @return сумму транзакции не менее 1 копейки.
+     */
     public double readAmount(BufferedReader reader) {
         double amount = 0.0;
         String answer;
@@ -234,6 +365,15 @@ public class Controller {
         return amount;
     }
 
+    /**
+     * Метод возвращающий счёт клиента для перевода по имени.
+     * Также проверяет введенные данные на корректность заполнения, наличие такого счёта в БД,
+     * а также не является ли счёт для перевода счетом с которого идёт перечисление средств.
+     * @see Account
+     * @param reader - объект чтения данных из консоли.
+     * @param userAccount - счёт клиента с которого он переводит деньги.
+     * @return счёт для перевода.
+     */
     public Account readAccountByName(BufferedReader reader, Account userAccount) {
         Account account = new Account();
         while (account.getId() == 0) {
@@ -258,6 +398,11 @@ public class Controller {
         return account;
     }
 
+    /**
+     * Метод для проверки корректности имени счёта.
+     * @param answer - строка с именем счёта.
+     * @return true если счёт введен корректно.
+     */
     public static boolean isCorrectAccountName(String answer) {
         String[] strings = answer.split(" ");
         boolean ans = false;
@@ -272,6 +417,11 @@ public class Controller {
         return ans;
     }
 
+    /**
+     * Метод для вычисления количества цифр после запятой в строке преобразованной в число.
+     * @param answer строка с числом.
+     * @return число знаков после запятой либо 3 если их много.
+     */
     private int calculateNumbersAfterDot(String answer) {
         String[] strings = answer.split("\\.");
         if (strings.length > 2) {
@@ -283,6 +433,11 @@ public class Controller {
         }
     }
 
+    /**
+     * Метод для возвращения подтверждения клиентом продолжения работы.
+     * @param reader - объект для чтения данных из консоли.
+     * @return true если да.
+     */
     public boolean isContinue(BufferedReader reader) {
         String answer;
         try {
@@ -293,6 +448,11 @@ public class Controller {
         return answer.equals("ДА") || answer.equals("YES");
     }
 
+    /**
+     * Метод для получения ответа клиента в меню состоящем из 2х пунктов
+     * @param reader - объект для чтения данных из консоли.
+     * @return ответ клиента.
+     */
     public String returnAnswerFromMenuTwoPoints(BufferedReader reader) {
         String answer = null;
         while (answer == null) {
@@ -316,7 +476,11 @@ public class Controller {
         }
         return answer;
     }
-
+    /**
+     * Метод для получения ответа клиента в меню состоящем из 3х пунктов
+     * @param reader - объект для чтения данных из консоли.
+     * @return ответ клиента.
+     */
     public String returnAnswerFromMenuThreePoints(BufferedReader reader) {
         String answer = null;
         while (answer == null) {
@@ -344,6 +508,12 @@ public class Controller {
         return answer;
     }
 
+    /**
+     * Метод для формирования отчёта клиенту за период.
+     * Период по выбору клиента - месяц, год либо весь период.
+     * @param reader - объект для чтения данных из консоли.
+     * @param userAccount - объект клиента
+     */
     public void accountStatementOutput(BufferedReader reader, Account userAccount) {
         LocalDateTime fromDate;
         LocalDateTime toDate;
@@ -387,6 +557,11 @@ public class Controller {
 
     }
 
+    /**
+     * Метод по выбору месяца клиентом.
+     * @param reader - объект для чтения данных из консоли.
+     * @return номер месяца, выбранного клиентом.
+     */
     private int selectionMonth(BufferedReader reader) {
         System.out.print(CHOOSE_MONTH);
         int month = 0;
@@ -402,7 +577,11 @@ public class Controller {
         }
         return month;
     }
-
+    /**
+     * Метод по выбору года клиентом.
+     * @param reader - объект для чтения данных из консоли.
+     * @return номер года, выбранного клиентом.
+     */
     private int selectionYear(BufferedReader reader) {
         int currentYear = LocalDateTime.now().getYear();
         System.out.printf(CHOOSE_YEAR, currentYear);
