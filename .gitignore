@@ -4,9 +4,6 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### check archive ###
-check
-
 ### IntelliJ IDEA ###
 .idea/modules.xml
 .idea/jarRepositories.xml
