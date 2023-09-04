@@ -1,5 +1,6 @@
 package ru.ngs.summerjob.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import ru.ngs.summerjob.entity.Account;
 import ru.ngs.summerjob.entity.Transaction;
 import ru.ngs.summerjob.entity.TransactionType;
@@ -20,6 +21,7 @@ import java.util.List;
  * Основной класс-клиент:
  * @see ru.ngs.summerjob.CleverBank
  */
+@Slf4j
 public class Controller {
     /**
      * Константа для вывода сообщения о неверных введенных данных в меню.
@@ -133,7 +135,10 @@ public class Controller {
      * @return объект класса клиент.
      */
     private User getUserByLoginAndPassword(String login, String password) {
-        return userService.getUserByLoginAndPassword(login, password);
+        log.info("метод getUserByLoginAndPassword принимает строку login=" + login + " и строку password=" + password);
+        User userByLoginAndPassword = userService.getUserByLoginAndPassword(login, password);
+        log.info("метод getUserByLoginAndPassword возвращает объект клиента:" + userByLoginAndPassword);
+        return userByLoginAndPassword;
     }
     /**
      * Получает объект класса тип транзакции по id.
@@ -142,7 +147,10 @@ public class Controller {
      * @return объект класса тип транзакции.
      */
     private TransactionType getTransactionTypeById(long id) {
-        return transactionTypeService.getTransactionTypeById(id);
+        log.info("метод getTransactionTypeById принимает id транзакции = " + id);
+        TransactionType transactionType = transactionTypeService.getTransactionTypeById(id);
+        log.info("метод getTransactionTypeById возвращает объект типа транзакции = " + transactionType);
+        return transactionType;
     }
 
     /**
@@ -153,6 +161,7 @@ public class Controller {
      * @return объект класса клиент.
      */
     public User userAuthorizationMethod(BufferedReader reader) {
+        log.info("Метод userAuthorizationMethod принимает объект для чтения данных из консоли");
         User user = new User();
         user.setId(0);
 
@@ -184,6 +193,7 @@ public class Controller {
             } else break;
             tryAgain = isContinue(reader);
         } while (tryAgain);
+        log.info("Метод userAuthorizationMethod возвращает объект клиента = " + user);
         return user;
     }
 
@@ -194,6 +204,7 @@ public class Controller {
      * @return тип транзакции, которую выбрал клиент
      */
     public TransactionType selectionOfTransactionType(BufferedReader reader) {
+        log.info("Метод selectionOfTransactionType принимает объект для чтения данных из консоли");
         TransactionType transactionType = null;
         String answer;
         while (transactionType == null) {
@@ -214,6 +225,7 @@ public class Controller {
                 default -> System.out.println(INCORRECT_CHOICE_FROM_MENU);
             }
         }
+        log.info("Метод selectionOfTransactionType возвращает объект типа транзакции = " + transactionType);
         return transactionType;
     }
 
@@ -225,6 +237,7 @@ public class Controller {
      * @return объект счёта.
      */
     public Account selectionOfAccount(BufferedReader reader, long userId) {
+        log.info("Метод selectionOfAccount принимает объект для чтения данных из консоли а также id клиента = " + userId);
         Account account = null;
         String answer;
 
@@ -249,6 +262,7 @@ public class Controller {
                 System.out.println(INCORRECT_CHOICE_FROM_MENU);
             }
         }
+        log.info("Метод selectionOfAccount возвращает объект клиента = " + account);
         return account;
     }
 
@@ -259,6 +273,7 @@ public class Controller {
      * @return строку с меню сгенерированному из всех счетов клиента.
      */
     public String createAccountsMenu(long userId) {
+        log.info("Метод createAccountsMenu принимает id клиента = " + userId);
         StringBuilder menu = new StringBuilder();
         List<Account> allUserAccounts = accountService.getAccountsByUserId(userId);
         if (allUserAccounts.isEmpty()) {
@@ -269,6 +284,7 @@ public class Controller {
                     "   Баланс: " + account.getBalance() + " " + account.getCurrency().getName() + System.lineSeparator() +
                     "   Номер счета: " + account.getName() + System.lineSeparator());
         }
+        log.info("Метод createAccountsMenu возвращает сформированную строку меню для выбора счетов = " + menu);
         return menu.toString();
     }
 
@@ -281,13 +297,18 @@ public class Controller {
      * @return true если операция завершена успешно.
      */
     public boolean replenishmentOfOwnAccount(Account userAccount, TransactionType transactionType, double amount) {
+        log.info("Метод replenishmentOfOwnAccount принимает объекты: счёт = " + userAccount
+                + " тип транзакции = " + transactionType + " сумма транзакции = " + amount);
         Transaction transaction = new Transaction();
         fillConstantFieldsForTransaction(transactionType, amount, transaction);
 
         transaction.setAccountSender(null);
         transaction.setAccountRecipient(userAccount);
         checkGenerator.saveCheckInFile(transaction);
-        return transactionService.saveTransaction(transaction);
+
+        boolean result = transactionService.saveTransaction(transaction);
+        log.info("Метод replenishmentOfOwnAccount возвращает результат успешности пополнения счёта = " + result);
+        return result;
     }
     /**
      * Метод снятия средств со счёта клиентом.
@@ -298,13 +319,18 @@ public class Controller {
      * @return true если операция завершена успешно.
      */
     public boolean withdrawFromOwnAccount(Account userAccount, TransactionType transactionType, double amount) {
+        log.info("Метод withdrawFromOwnAccount принимает объекты: счёт = " + userAccount
+                + " тип транзакции = " + transactionType + " сумма транзакции = " + amount);
         Transaction transaction = new Transaction();
         fillConstantFieldsForTransaction(transactionType, amount, transaction);
 
         transaction.setAccountSender(null);
         transaction.setAccountRecipient(userAccount);
         checkGenerator.saveCheckInFile(transaction);
-        return transactionService.saveTransaction(transaction);
+
+        boolean result = transactionService.saveTransaction(transaction);
+        log.info("Метод withdrawFromOwnAccount возвращает результат успешности снятия денег со счёта = " + result);
+        return result;
     }
     /**
      * Метод пополнения перевода денег клиентом на счёт другого лица.
@@ -316,13 +342,17 @@ public class Controller {
      * @return true если операция завершена успешно.
      */
     public boolean remittance(Account userAccount, Account recepientAccount, TransactionType transactionType, double amount) {
+        log.info("Метод remittance принимает объекты: счёт клиента = " + userAccount + " счёт получателя = "
+                + recepientAccount + " тип транзакции = " + transactionType + " сумма перевода = " + amount);
         Transaction transaction = new Transaction();
         fillConstantFieldsForTransaction(transactionType, amount, transaction);
 
         transaction.setAccountSender(userAccount);
         transaction.setAccountRecipient(recepientAccount);
         checkGenerator.saveCheckInFile(transaction);
-        return transactionService.saveTransaction(transaction);
+        boolean result = transactionService.saveTransaction(transaction);
+        log.info("Метод remittance возвращает результат успешности осуществления перевода = " + result);
+        return result;
     }
 
     /**
@@ -332,6 +362,8 @@ public class Controller {
      * @param transaction - транзакция для заполнения.
      */
     private static void fillConstantFieldsForTransaction(TransactionType transactionType, double amount, Transaction transaction) {
+        log.info("Метод fillConstantFieldsForTransaction принимает объекты: тип транзакции = " + transactionType
+                + " сумма платежа = " + amount + " транзакция = " + transaction);
         transaction.setDate(LocalDateTime.now());
         transaction.setType(transactionType);
         transaction.setAmount(amount);
@@ -344,6 +376,7 @@ public class Controller {
      * @return сумму транзакции не менее 1 копейки.
      */
     public double readAmount(BufferedReader reader) {
+        log.info("Метод readAmount принимает объект для чтения данных из консоли");
         double amount = 0.0;
         String answer;
         int countOfNumbersAfterDot = 0;
@@ -362,6 +395,7 @@ public class Controller {
                 System.out.println(INCORRECT_SUM);
             }
         }
+        log.info("Метод readAmount возвращает количество средств для перевода = " + amount);
         return amount;
     }
 
@@ -375,6 +409,7 @@ public class Controller {
      * @return счёт для перевода.
      */
     public Account readAccountByName(BufferedReader reader, Account userAccount) {
+        log.info("Метод readAccountByName принимает объект чтения данных из консоли, а также объект счёта клиента = " + userAccount);
         Account account = new Account();
         while (account.getId() == 0) {
             String accountName;
@@ -395,6 +430,7 @@ public class Controller {
                 account.setId(0);
             }
         }
+        log.info("Метод readAccountByName возвращает объект счёта для перевода = " + account);
         return account;
     }
 
@@ -404,6 +440,7 @@ public class Controller {
      * @return true если счёт введен корректно.
      */
     public static boolean isCorrectAccountName(String answer) {
+        log.info("Метод isCorrectAccountName принимает строку со счётом = " + answer);
         String[] strings = answer.split(" ");
         boolean ans = false;
         if (strings.length == 7) {
@@ -414,6 +451,7 @@ public class Controller {
                 }
             }
         }
+        log.info("Метод isCorrectAccountName возвращает результат проверки введенного счёта на корректность = " + ans);
         return ans;
     }
 
@@ -423,12 +461,16 @@ public class Controller {
      * @return число знаков после запятой либо 3 если их много.
      */
     private int calculateNumbersAfterDot(String answer) {
+        log.info("Метод calculateNumbersAfterDot принимает строку с введенной суммой = " + answer);
         String[] strings = answer.split("\\.");
         if (strings.length > 2) {
+            log.info("Метод calculateNumbersAfterDot возвращает значение = 3");
             return 3;
         } else if (strings.length > 1) {
+            log.info("Метод calculateNumbersAfterDot возвращает значение = " + strings.length);
             return strings[1].length();
         } else {
+            log.info("Метод calculateNumbersAfterDot возвращает значение = 0");
             return 0;
         }
     }
@@ -439,12 +481,15 @@ public class Controller {
      * @return true если да.
      */
     public boolean isContinue(BufferedReader reader) {
+        log.info("Метод isContinue принимает объект для чтения данных из консоли");
         String answer;
         try {
             answer = reader.readLine().toUpperCase();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        log.info("Метод isContinue возвращает значение желания клиента продолжить работу = "
+                + (answer.equals("ДА") || answer.equals("YES")));
         return answer.equals("ДА") || answer.equals("YES");
     }
 
@@ -454,6 +499,7 @@ public class Controller {
      * @return ответ клиента.
      */
     public String returnAnswerFromMenuTwoPoints(BufferedReader reader) {
+        log.info("Метод returnAnswerFromMenuTwoPoints принимает объект для чтения данных из консоли");
         String answer = null;
         while (answer == null) {
             try {
@@ -474,6 +520,7 @@ public class Controller {
                 }
             }
         }
+        log.info("Метод returnAnswerFromMenuTwoPoints возвращает ответ пользователя из меню = " + answer);
         return answer;
     }
     /**
@@ -482,6 +529,7 @@ public class Controller {
      * @return ответ клиента.
      */
     public String returnAnswerFromMenuThreePoints(BufferedReader reader) {
+        log.info("Метод returnAnswerFromMenuThreePoints принимает объект для чтения данных из консоли");
         String answer = null;
         while (answer == null) {
             try {
@@ -505,6 +553,7 @@ public class Controller {
                 }
             }
         }
+        log.info("Метод returnAnswerFromMenuThreePoints возвращает ответ пользователя из меню = " + answer);
         return answer;
     }
 
@@ -515,6 +564,7 @@ public class Controller {
      * @param userAccount - объект клиента
      */
     public void accountStatementOutput(BufferedReader reader, Account userAccount) {
+        log.info("Метод accountStatementOutput принимает объект для чтения данных из консоли, а также объект счёта = " + userAccount);
         LocalDateTime fromDate;
         LocalDateTime toDate;
         System.out.print(CHOOSE_PERIOD);
@@ -537,6 +587,7 @@ public class Controller {
                 List<Transaction> transactionsByUserIdAndPeriod =
                         transactionService.getTransactionsByUserIdAndPeriod(userAccount.getId(), fromDate, toDate);
                 accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate, 0, 0);
+                log.info("Метод accountStatementOutput сохраняет счёт по транзакции за месяц");
             }
             case ("2") -> {
                 int year = selectionYear(reader);
@@ -545,6 +596,8 @@ public class Controller {
                 List<Transaction> transactionsByUserIdAndPeriod =
                         transactionService.getTransactionsByUserIdAndPeriod(userAccount.getId(), fromDate, toDate);
                 accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate, 0, 0);
+                log.info("Метод accountStatementOutput сохраняет счёт по транзакции за год");
+
             }
             case ("3") -> {
                 fromDate = LocalDateTime.of(1970, 1, 1, 0, 0, 0, 0);
@@ -552,6 +605,7 @@ public class Controller {
                 List<Transaction> transactionsByUserIdAndPeriod =
                         transactionService.getTransactionsByUserIdAndPeriod(userAccount.getId(), fromDate, toDate);
                 accountStatementGenerator.saveAccountStatement(transactionsByUserIdAndPeriod, userAccount, fromDate, toDate, 0, 0);
+                log.info("Метод accountStatementOutput сохраняет счёт по транзакции за весь период");
             }
         }
 
@@ -563,6 +617,7 @@ public class Controller {
      * @return номер месяца, выбранного клиентом.
      */
     private int selectionMonth(BufferedReader reader) {
+        log.info("Метод selectionMonth принимает объект для чтения данных из консоли");
         System.out.print(CHOOSE_MONTH);
         int month = 0;
         while (month < 1 || month > 12) {
@@ -575,6 +630,7 @@ public class Controller {
                 System.out.println(INCORRECT_CHOICE_FROM_MENU);
             }
         }
+        log.info("Метод selectionMonth возвращает числовое значение месяца выбранного клиентом = " + month);
         return month;
     }
     /**
@@ -583,6 +639,7 @@ public class Controller {
      * @return номер года, выбранного клиентом.
      */
     private int selectionYear(BufferedReader reader) {
+        log.info("Метод selectionYear принимает объект для чтения данных из консоли");
         int currentYear = LocalDateTime.now().getYear();
         System.out.printf(CHOOSE_YEAR, currentYear);
         int year = 0;
@@ -596,6 +653,7 @@ public class Controller {
                 System.out.println(INCORRECT_CHOICE_FROM_MENU);
             }
         }
+        log.info("Метод selectionYear возвращает значение года выбранного клиентом = " + year);
         return year;
     }
 }
